@@ -1,0 +1,579 @@
+/* score.css — 乐谱跟练（v2：乐谱为主视觉，提示就近附着） */
+.score-toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.score-toolbar .row { gap: 8px; }
+.vlab { font-size: 12px; color: var(--text-faint); margin-right: 2px; }
+
+/* 训练目标行（刘天华公版体系：练习曲挂训练目标 + 练完进入哪首乐曲） */
+.sc-goal {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 10px; padding: 7px 12px;
+  background: var(--bg-soft); border: 1px dashed var(--accent-line); border-radius: var(--radius-lg);
+  font-size: 12.5px; color: var(--text-faint); line-height: 1.55;
+}
+.sc-goal-text { flex: 1 1 260px; min-width: 0; }
+.sc-goal .sc-goal-next { flex: none; }
+
+/* 乐谱滚动区：多行网格（K-11 长曲目版），当前小节所在行自动居中
+   container-type：让「每行小节数」跟随谱面列实际宽度自适应——
+   非全屏（左侧还有曲库栏）时列窄，自动降为 3/2 小节一行，避免硬塞 4 小节挤成一团 */
+.score-scroll {
+  max-height: 46vh; overflow: auto; padding: 14px;
+  background: var(--bg-soft); border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  scroll-behavior: auto;
+  container-type: inline-size;
+}
+/* 一行 4 小节（flex-wrap 自动换行）；窄容器自动降为 3 / 2 小节 */
+.score-sheet {
+  display: flex; flex-wrap: wrap; align-items: stretch;
+  gap: 34px 10px; --beat-w: 26px;
+}
+@container (max-width: 619px) {
+  .score-sheet .bar { width: calc(50% - 5px); }
+}
+@container (min-width: 620px) and (max-width: 979px) {
+  .score-sheet .bar { width: calc(33.333% - 7px); }
+}
+@container (min-width: 980px) {
+  .score-sheet .bar { width: calc(25% - 8px); }
+}
+.score-sheet .note { min-width: max(26px, calc(var(--beat-w) * var(--nd, 1))); }
+.score-sheet .note .digit { font-size: 20px; }
+.score-sheet .note .extseg { height: 26px; }
+
+/* 小节：左侧小节线（border-left），整体作为高亮单元 */
+.bar {
+  display: flex; align-items: flex-end; gap: 6px; padding: 6px 12px;
+  border-left: 2px solid var(--border-strong);
+  border-right: 1px solid var(--border);
+  position: relative; border-radius: 4px;
+  transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+.bar:last-child { border-right: 2px solid var(--border-strong); }
+.bar.clickable { cursor: pointer; }
+.bar:hover { background: var(--accent-soft); }
+.bar.ab { outline: 2px dashed var(--accent-line); outline-offset: -2px; border-radius: 8px; }
+/* K歌式聚焦：非当前句淡化 */
+.bar.dim { opacity: 0.35; }
+.bar .bnum {
+  font-size: 10px; color: var(--text-faint); align-self: flex-start; margin-right: 2px;
+  font-family: var(--mono);
+}
+/* 当前演奏小节：整段低透明度底色，框住演奏区域（不做单音变色） */
+.bar.cur { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent-line); }
+.score-sheet.hide-highlight .bar.cur { background: transparent; box-shadow: none; }
+
+/* 音符占拍版面：宽度 = 拍数 × --beat-w（1 - - - 占 4 拍宽，从版面宽度直读时值）；
+   .nmain 是音符本体（数字/指法/音名），.extseg 是延音段（每段 1 拍宽，只画横线、不带指法） */
+.note {
+  min-width: max(34px, calc(var(--beat-w) * var(--nd, 1)));
+  padding: 3px 3px 2px; border-radius: 7px; text-align: center;
+  display: inline-flex; align-items: flex-start; flex: none;
+  position: relative; transition: background 0.1s;
+}
+.note .nmain { flex: 0 1 auto; min-width: var(--beat-w); }
+.note .digit {
+  font-size: 24px; font-weight: 700; font-family: var(--mono); line-height: 1.25;
+  position: relative; display: inline-block; padding: 0 2px;
+}
+.note .dot { font-size: 18px; font-weight: 400; margin-left: 1px; opacity: 0.9; }
+/* 延音段：高度与 digit 行一致使横线对齐数字中线；横线为图形绘制（非字符） */
+.note .extseg {
+  flex: none; width: var(--beat-w); height: 30px;
+  display: flex; align-items: center;
+}
+.note .extseg::before {
+  content: ""; flex: 1; height: 2px; margin: 0 3px;
+  background: currentColor; opacity: 0.75; border-radius: 1px;
+}
+/* 当前小节高亮：延音横线同步变主色 */
+.bar.cur .note .extseg::before { background: var(--accent); opacity: 1; }
+.score-sheet.hide-highlight .bar.cur .note .extseg::before { background: currentColor; opacity: 0.75; }
+
+/* 换把标记：橙色实心小倒三角，挂目标音符右上角（不遮挡数字）；
+   显隐由 .hide-shift 统一控制（默认关闭）；当前小节内同步提亮放大 */
+.note .shiftmark {
+  position: absolute; top: -1px; right: 1px; width: 0; height: 0; z-index: 2;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-top: 7px solid #f97316;
+  cursor: help; transition: transform 0.15s;
+}
+.bar.cur .note .shiftmark { border-top-color: #fb923c; transform: scale(1.3); }
+.score-sheet.hide-shift .shiftmark { display: none; }
+.score-fullscreen .note .shiftmark { border-left-width: 6px; border-right-width: 6px; border-top-width: 9px; }
+
+/* 曲库卡片【含换把】标签 / 标题行「本曲包含换把技巧」提示 */
+.list-item .m .shift-tag { color: #f97316; font-weight: 600; margin-left: 4px; }
+.list-item .m .grade-tag { color: #0ea5e9; font-weight: 600; margin-left: 4px; }
+.shift-hint { font-size: 12px; font-weight: 600; color: #f97316; white-space: nowrap; }
+
+/* 无换把曲目：换把标记开关保留但置灰 */
+.switch.disabled { opacity: 0.45; cursor: not-allowed; }
+.switch.disabled input { cursor: not-allowed; }
+/* 减时线：八分单线 / 十六分双线（简谱数字下加线） */
+.note.beam1 .digit { padding-bottom: 3px; border-bottom: 2px solid currentColor; }
+.note.beam2 .digit { padding-bottom: 3px; border-bottom: 2px solid currentColor; box-shadow: 0 3px 0 0 currentColor; }
+.note .digit::before, .note .digit::after {
+  content: "·"; position: absolute; left: 50%; transform: translateX(-50%);
+  font-size: 15px; color: inherit; display: none;
+}
+.note.hi .digit::before { display: block; top: -7px; }
+.note.lo .digit::after { display: block; bottom: -7px; }
+/* 指法/弓法竖排：各占一行、宽度收敛到 ≤1 拍宽（--beat-w）。
+   横排时「空指 拉」把音符撑到 ~50px，非全屏列窄时溢出小节、与邻音重叠——拥挤根因 */
+.note .nsub {
+  font-size: 10px; color: var(--text-faint); line-height: 1.3; white-space: nowrap;
+  display: flex; flex-direction: column; align-items: center;
+}
+.note.rest .digit { color: var(--text-faint); }
+/* 休止符视觉强化：虚线占位框，一眼可辨「这里空拍」（否则拥挤视图下 0 像漏排） */
+.note.rest {
+  background: var(--bg);
+  outline: 1px dashed var(--border-strong); outline-offset: -3px; border-radius: 7px;
+}
+.note .nname { font-size: 10px; color: var(--text-faint); font-family: var(--mono); }
+.note.s-inner { border-bottom: 2px solid var(--string-inner); }
+.note.s-outer { border-bottom: 2px solid var(--string-outer); }
+.note .bowmark { font-size: 11px; color: var(--text-dim); }
+.slur-arc { color: var(--text-faint); font-size: 12px; align-self: center; }
+
+/* 小节内节拍竖线（可选，默认关）：跟随节拍在小节内从左到右 */
+.beat-line {
+  position: absolute; top: 2px; bottom: 2px; width: 2px; background: var(--accent);
+  opacity: 0.55; transform: translateX(-1px); pointer-events: none; z-index: 4;
+}
+.score-sheet.hide-beatline .beat-line { display: none; }
+
+.score-toolbar .speed-row input[type="range"] { max-width: 220px; }
+
+/* ---- 切换动作标记（就近附着谱面小节线左侧）---- */
+.smark {
+  align-self: center; margin-left: auto; position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; line-height: 1; padding: 2px 6px; border-radius: 6px;
+  background: var(--bg-soft); border: 1px solid var(--border-strong); color: var(--text-dim);
+  white-space: nowrap; user-select: none;
+}
+.smark .smark-lbl { font-family: var(--mono); font-weight: 700; letter-spacing: 0.02em; }
+.smark.smark-str { color: var(--warn); border-color: var(--warn-line); background: var(--warn-soft); }
+.smark.smark-pos { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+.smark.warn { box-shadow: 0 0 0 3px var(--warn-soft); animation: smarkBlink 0.6s steps(1, end) infinite; }
+.smark.solid { filter: saturate(1.2) brightness(1.05); box-shadow: 0 0 0 2px currentColor; }
+@keyframes smarkBlink {
+  0%, 100% { box-shadow: 0 0 0 2px var(--warn-soft); }
+  50% { box-shadow: 0 0 0 5px var(--warn); }
+}
+.smark .tip {
+  position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  margin-bottom: 6px; padding: 4px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap;
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-panel); display: none; z-index: 20;
+}
+.smark:hover .tip { display: block; }
+.score-sheet.hide-marks .smark { display: none; }
+
+/* ---- 顶部概览时间轴（原信号灯条降级）---- */
+.sigbar { margin-bottom: 12px; }
+.hide-timeline .sigbar { display: none; }
+.sigbar-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 2px; }
+.sigbar-title { font-size: 13px; color: var(--text-dim); letter-spacing: 0.06em; }
+.sigbar-cap { font-size: 13px; color: var(--text-dim); font-family: var(--mono); }
+.sigbar-cap.hot { color: var(--warn); font-weight: 600; }
+.sigbar-legend { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-faint); }
+.sigbar-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.sigbar-legend .lg { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.lg-inner { background: var(--string-inner); }
+.lg-outer { background: var(--string-outer); }
+.lg-mix { background: linear-gradient(135deg, var(--string-inner), var(--string-outer)); }
+.lg-chg { background: transparent; outline: 2px solid var(--warn); outline-offset: 1px; }
+
+.sigbar-track { position: relative; display: block; padding: 18px 4px 4px; cursor: pointer; }
+.tl-inner { position: relative; display: flex; align-items: center; gap: 2px; height: 10px; }
+.tl-seg { flex: 1; height: 10px; border-radius: 5px; background: var(--border-strong); position: relative; }
+.tl-seg.done { background: var(--accent-soft); }
+.tl-seg.on { background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.tl-seg.chg .tl-flag { display: inline-block; }
+.tl-flag {
+  position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; line-height: 1; padding: 1px 4px; border-radius: 5px; white-space: nowrap;
+  color: var(--warn); background: var(--warn-soft); border: 1px solid var(--warn-line); display: none;
+}
+.tl-cursor { position: absolute; top: 18px; bottom: 4px; width: 2px; background: var(--accent); transform: translateX(-1px); pointer-events: none; }
+
+/* ---- 全屏图谱模式 ---- */
+.score-fullscreen {
+  position: fixed; inset: 0; z-index: 300; background: var(--bg);
+  overflow: auto; padding: 56px 22px 18px; margin: 0; max-width: none;
+}
+.score-fullscreen .grid-side { grid-template-columns: 1fr; gap: 14px; align-items: stretch; }
+.score-fullscreen #scList { display: none; }
+.score-fullscreen .score-scroll { max-height: calc(100vh - 230px); }
+.score-fullscreen .note .digit { font-size: 38px; }
+.score-fullscreen .score-sheet { --beat-w: 42px; }
+.score-fullscreen .score-sheet .note { min-width: max(34px, calc(var(--beat-w) * var(--nd, 1))); }
+.score-fullscreen .note .extseg { height: 48px; }
+.score-fullscreen .sigbar { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--border); }
+.score-fullscreen .sentbar { position: sticky; top: 52px; z-index: 4; }
+
+/* 练习句条（K-11）：K歌式句号 chips，点句循环该句 */
+.sentbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 12px; margin: 8px 0;
+  background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px;
+}
+.sentbar-chip {
+  font-size: 11px; line-height: 1.6; color: var(--text-dim);
+  background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
+  padding: 1px 10px; flex: none;
+}
+.sentbar-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sent-chip {
+  min-width: 30px; height: 26px; padding: 0 7px;
+  border-radius: 7px; border: 1px solid var(--border-strong);
+  background: var(--bg); color: var(--text);
+  font-size: 13px; cursor: pointer;
+  transition: background 70ms ease, color 70ms ease, border-color 70ms ease;
+}
+.sent-chip:hover { border-color: var(--accent); color: var(--accent); }
+.sent-chip.on { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.sentbar-cap { margin-left: auto; font-size: 11px; color: var(--text-faint); text-align: right; }
+
+/* 拍点闪烁行（K-10）：位于时间轴与谱面之间，播放期间常驻可见（谱面在 score-scroll 内滚动，不影响本行） */
+.beatbar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 7px 12px; margin: 8px 0;
+  background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 10px;
+}
+.beatbar-chip {
+  font-size: 11px; line-height: 1.6; color: var(--bg); background: var(--accent);
+  border-radius: 999px; padding: 1px 10px; flex: none;
+}
+.beatbar-dots { display: flex; align-items: center; gap: 20px; flex: none; }
+.bdot {
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--bg); border: 1.5px solid var(--border-strong);
+  transition: transform 70ms ease, background 70ms ease, border-color 70ms ease;
+}
+.bdot.acc { border-color: var(--accent); }
+.bdot.on { background: var(--accent); border-color: var(--accent); transform: scale(1.3); }
+.bdot.acc.on { box-shadow: 0 0 0 3px var(--accent-soft); }
+.beatbar-info { font-size: 12px; color: var(--text-dim); font-variant-numeric: tabular-nums; margin-left: auto; }
+
+.score-empty { text-align: center; color: var(--text-dim); padding: 40px 0; }
+.list-item {
+  padding: 10px 12px; border-radius: var(--radius); cursor: pointer;
+  border: 1px solid transparent; margin-bottom: 2px;
+}
+.list-item:hover { background: var(--panel-2); }
+.list-item.on { background: var(--accent-soft); border-color: var(--accent-line); }
+.list-item .t {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 14px; font-weight: 600;
+}
+.list-item .t .tt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-item .m { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+/* 曲库难度评分（五星制 1~5，支持半星）：实星/半星用主题琥珀色，空星用弱文本色 */
+.diff { flex: none; display: inline-flex; align-items: baseline; gap: 4px; }
+.diff .stars { font-size: 12px; line-height: 1; letter-spacing: 1px; color: var(--text-faint); }
+.diff .stars b { font-weight: 400; color: var(--warn); }
+.diff .stars .half {
+  font-style: normal; color: var(--warn);
+  background: linear-gradient(90deg, var(--warn) 50%, var(--text-faint) 50%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.diff .diff-n { font-size: 11px; font-weight: 600; color: var(--text-dim); }
+.list-cat { font-size: 12px; color: var(--text-faint); margin: 10px 0 6px; letter-spacing: 0.06em; }
+
+/* ---- 曲库：搜索、筛选、可折叠分组、最近练习 ---- */
+.score-lib-head {
+  display: flex; align-items: center; gap: 12px; justify-content: space-between;
+  margin-bottom: 12px; flex-wrap: wrap;
+}
+.score-lib-head h3 { margin: 0; }
+.score-search {
+  flex: 1; min-width: 160px; max-width: 260px;
+  background: var(--panel-2); border: 1px solid var(--border-strong);
+  color: var(--text); border-radius: var(--radius); padding: 7px 12px;
+  font-size: 14px; outline: none;
+}
+.score-search:focus { border-color: var(--accent); }
+.score-filters { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.score-filters .filter-row { align-items: center; gap: 10px; }
+.score-filters .vlab { flex: none; }
+
+.score-recent { margin-bottom: 14px; }
+.score-recent-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.score-recent-title {
+  font-size: 12px; color: var(--accent); font-weight: 600; letter-spacing: 0.06em;
+}
+.score-recent-list .list-item { background: var(--accent-soft); }
+
+.score-group-head {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 12px; margin: 0 0 8px; cursor: pointer; color: var(--text);
+  font-size: 13px; font-weight: 600;
+}
+.score-group-head:hover { border-color: var(--accent); }
+.score-group-title { flex: 1; text-align: left; }
+.score-group-count {
+  font-size: 11px; color: var(--text-faint); background: var(--bg-soft);
+  padding: 2px 8px; border-radius: 999px;
+}
+.score-group-caret {
+  font-size: 11px; color: var(--text-dim);
+  transition: transform var(--dur) var(--ease);
+}
+.score-group-head.collapsed .score-group-caret { transform: rotate(-90deg); }
+.score-group-body { margin-bottom: 10px; }
+
+.pitch-panel { display: none; margin-top: 12px; }
+.pitch-panel.show { display: block; }
+.pitch-read { display: flex; align-items: baseline; gap: 14px; justify-content: center; }
+.pitch-read .cents { font-size: 34px; font-family: var(--mono); font-weight: 700; }
+.pitch-read .cents.good { color: var(--ok); }
+.pitch-read .cents.far { color: var(--err); }
+.pitch-read .nn { font-size: 18px; font-family: var(--mono); color: var(--text-dim); }
+.pitch-target { text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+
+/* ---- 全屏顶部信息栏 ---- */
+.score-fs-top { display: none; }
+.score-fullscreen .score-fs-top {
+  display: flex; align-items: center; gap: 10px; justify-content: space-between;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 301;
+  padding: 10px 12px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  pointer-events: none; /* 让谱面点击能穿透到热区，内部子元素单独开启 */
+}
+.score-fullscreen .score-fs-top > * { pointer-events: auto; }
+.score-fs-title {
+  font-size: 15px; font-weight: 700;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+  margin-right: 8px;
+}
+.score-fs-actions { display: flex; align-items: center; gap: 6px; }
+.score-timer {
+  font-family: var(--mono); font-size: 15px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--accent); font-variant-numeric: tabular-nums;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 3px 10px; line-height: 1.25;
+}
+/* 全屏右上角常驻计时 */
+.score-fullscreen .score-fs-timer {
+  position: fixed; top: 10px; right: 12px; z-index: 302;
+  pointer-events: none;
+}
+.score-fullscreen .score-fs-actions { margin-right: 90px; } /* 给右上角计时留空 */
+
+/* ---- 全屏轻触/上滑唤起热区 ---- */
+.score-fs-touch { display: none; }
+.score-fullscreen .score-fs-touch {
+  display: block;
+  position: fixed; top: 56px; left: 0; right: 0; bottom: 0; z-index: 6;
+  /* 透明热区：轻触 / 上滑唤起控制浮层 */
+}
+
+/* ---- 全屏底部悬浮控制面板（核心控件） ---- */
+.score-fs-float { display: none; }
+.score-fullscreen .score-fs-float {
+  display: flex;
+  position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 303;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+  transform: translateY(0);
+  transition: transform .28s ease, opacity .22s ease, visibility .22s ease;
+}
+.score-fullscreen .score-fs-float.collapsed {
+  transform: translateY(calc(100% + 20px));
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.score-fs-float-inner { width: 100%; padding: 10px 12px; }
+.score-fs-core {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.score-fs-core .speed-row { flex: 1; min-width: 140px; }
+.score-fs-core .mode-row { flex: 1 1 100%; }
+.score-fs-core .mode-seg { flex: 1; }
+.score-fs-close {
+  margin-left: auto;
+  background: none; border: none; color: var(--text-dim);
+  font-size: 16px; width: 32px; height: 32px; border-radius: var(--radius);
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.score-fs-close:hover { background: var(--panel-2); color: var(--text); }
+
+/* ---- 全屏高级设置弹窗 ---- */
+.score-fs-modal {
+  display: none;
+  position: fixed; inset: 0; z-index: 304;
+  align-items: flex-end; justify-content: center;
+  background: rgba(0,0,0,0.35);
+}
+.score-fs-modal.open { display: flex; }
+.score-fs-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+}
+.score-fs-modal-body {
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 12px;
+  max-height: 60vh; overflow: auto;
+}
+.score-fs-modal > .score-fs-modal-inner {
+  width: 100%; max-width: 640px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-panel);
+  animation: fsModalUp .25s ease;
+}
+@keyframes fsModalUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.score-fullscreen .sc-head-row,
+.score-fullscreen .score-toolbar { display: none; }
+
+/* 模式切换按钮组 */
+.mode-row { align-items: center; }
+.mode-seg button { padding: 5px 10px; font-size: 12px; }
+
+/* ---- 移动端适配 ---- */
+@media (max-width: 640px) {
+  .sc-head-row { flex-wrap: wrap; gap: 10px; }
+  .sc-head-row .badge { font-size: 11px; }
+  .score-toolbar { gap: 8px; margin-bottom: 10px; }
+  .score-toolbar .row { gap: 6px; }
+  .score-toolbar label.field { font-size: 11px; }
+  .score-toolbar .speed-row input[type="range"] { max-width: 140px; }
+  .score-toolbar .loop-row { flex-wrap: wrap; }
+  .score-toolbar .toggles-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .score-toolbar .toggles-row > * { justify-self: start; }
+  .mode-seg button { padding: 8px 12px; font-size: 13px; }
+  .score-scroll { max-height: 52vh; padding: 10px; border-radius: var(--radius); }
+  /* 每行小节数由上方 @container 按谱面列宽自适应（窄屏自然落到 2 小节/行） */
+  .score-sheet { gap: 28px 8px; }
+  .bar { padding: 5px 8px; gap: 4px; }
+  .score-sheet { --beat-w: 28px; }
+  .note { min-width: max(30px, calc(var(--beat-w) * var(--nd, 1))); padding: 2px 2px 1px; border-radius: 6px; }
+  .note .digit { font-size: 20px; }
+  .note .digit::before, .note .digit::after { font-size: 13px; }
+  .note .extseg { height: 25px; }
+  .note .dot { font-size: 15px; }
+  .note.hi .digit::before { top: -6px; }
+  .note.lo .digit::after { bottom: -6px; }
+  .note .nsub, .note .nname { font-size: 9px; }
+  .smark { font-size: 9px; padding: 2px 4px; }
+  .sigbar-head { gap: 6px; }
+  .sigbar-title { font-size: 12px; }
+  .sigbar-cap { font-size: 12px; }
+  .sigbar-legend { gap: 8px; font-size: 10px; margin-left: 0; }
+  .tl-inner { height: 8px; }
+  .tl-seg { height: 8px; border-radius: 4px; }
+  .tl-flag { top: -14px; font-size: 8px; padding: 1px 3px; }
+  .pitch-read .cents { font-size: 28px; }
+  .pitch-read .nn { font-size: 16px; }
+
+  .score-fullscreen { padding: 56px 12px 0; }
+  .score-fullscreen .score-scroll { max-height: calc(100vh - 70px); }
+  .score-fullscreen .note .digit { font-size: 34px; }
+  .score-fullscreen .note .extseg { height: 42px; }
+  .score-fs-title { max-width: 50vw; font-size: 14px; }
+  .score-timer { font-size: 14px; padding: 2px 8px; }
+  .score-fs-actions { gap: 4px; }
+  .score-fs-actions .btn.small { padding: 4px 8px; min-height: 32px; }
+
+  /* 曲库移动端：搜索框撑满、条目加高 */
+  .score-lib-head { gap: 8px; margin-bottom: 10px; }
+  .score-search { max-width: none; min-width: 120px; width: 100%; padding: 9px 12px; font-size: 15px; }
+  .score-filters { gap: 8px; margin-bottom: 10px; }
+  .score-filters .filter-row { gap: 6px; }
+  .score-filters .filter-row .vlab { font-size: 11px; }
+  .score-filters .seg button { padding: 8px 10px; font-size: 13px; }
+  .list-item { padding: 14px 12px; margin-bottom: 4px; }
+  .list-item .t { font-size: 15px; }
+  .list-item .m { font-size: 13px; margin-top: 2px; }
+  .score-group-head { padding: 12px 14px; margin-bottom: 10px; }
+
+  /* 手机全屏：谱面占满，控制浮层默认隐藏 */
+  .score-fullscreen .score-scroll {
+    padding-top: 8px; padding-bottom: 20px;
+  }
+  .score-fullscreen .score-fs-float {
+    left: 10px; right: 10px; bottom: 10px;
+    border-radius: var(--radius-lg);
+  }
+  .score-fs-core { gap: 8px; }
+  .score-fs-core .btn.primary { min-height: 44px; min-width: 88px; }
+  .score-fs-core .speed-row { min-width: 120px; }
+  .score-fs-core .mode-seg { flex: 1 1 100%; }
+  .score-fs-core .mode-seg button { padding: 8px 10px; font-size: 12px; flex: 1; }
+}
+
+@media (min-width: 641px) {
+  /* 桌面端：控制浮层常开，不显示收起按钮 */
+  .score-fs-float { position: sticky; bottom: 0; margin-top: 12px; }
+  .score-fullscreen .score-fs-float { position: sticky; }
+  .score-fullscreen .score-fs-float.collapsed {
+    transform: none; opacity: 1; visibility: visible; pointer-events: auto;
+  }
+  .score-fs-close { display: none; }
+  .score-fs-touch { display: none !important; }
+  .score-fullscreen .score-fs-timer { position: static; }
+  .score-fullscreen .score-fs-actions { margin-right: 0; }
+}
+
+@media (max-width: 420px) {
+  .score-toolbar .speed-row input[type="range"] { max-width: 110px; }
+  .score-toolbar .toggles-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .score-sheet { --beat-w: 25px; }
+  .note { min-width: max(26px, calc(var(--beat-w) * var(--nd, 1))); }
+  .note .digit { font-size: 18px; }
+  .note .extseg { height: 22px; }
+}
+
+/* ---- 歌词：小节附属文本 / K 歌悬浮行 ---- */
+/* 字号介于简谱(24)与指法(10)之间；默认浅灰，高亮时变主色，与小节高亮统一 */
+/* 歌词：挂在乐句末小节 bar 内，绝对定位在小节下方（多行排版下不能占网格位）；
+   z-index 抬到行间 gap 层，避免被下一行小节底色/边框盖住 */
+.bar-lyric {
+  position: absolute; left: 2px; right: 2px; bottom: -24px; z-index: 2;
+  font-size: 15px; line-height: 1.5; color: var(--text-dim);
+  text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  letter-spacing: 0.02em; user-select: none; pointer-events: none;
+  transition: color var(--dur) var(--ease), font-weight var(--dur) var(--ease);
+}
+.bar-lyric.on { color: var(--accent); font-weight: 600; }
+
+/* 歌词行（谱面上方独立区域，K 歌式随句高亮）：常驻大字，阅读不费眼 */
+.lyric-float {
+  margin: 0 0 12px; padding: 12px 14px;
+  background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  font-size: 20px; line-height: 1.5; color: var(--text-dim);
+  text-align: center; min-height: 1.6em;
+  letter-spacing: 0.04em; user-select: none;
+  transition: color var(--dur) var(--ease);
+}
+.lyric-float .lf-empty { color: var(--text-faint); font-size: 14px; }
+.lyric-float .lf-cur { color: var(--accent); font-weight: 600; }
+
+/* 全屏图谱：歌词跟随小节一起缩放 */
+.score-fullscreen .bar-lyric { font-size: 22px; }
+.score-fullscreen .lyric-float { font-size: 26px; padding: 14px; }
+
+@media (max-width: 640px) {
+  .bar-lyric { font-size: 13px; }
+  .lyric-float { font-size: 17px; margin-bottom: 10px; }
+  .score-fullscreen .bar-lyric { font-size: 18px; }
+  .score-fullscreen .lyric-float { font-size: 21px; }
+}

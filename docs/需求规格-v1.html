@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     reading-view-template.html — 可读版式页面骨架
+     两种用法：
+       A. 交给 scripts/md_to_readable.py 自动填充（推荐）：{{...}} 会被脚本替换
+       B. 手工使用：复制本文件 → 把 /* ============================================================
+   reading-view.css — 可读版式 v1.0
+   用途：把长文本渲染成便于持续阅读的单页 HTML
+   依据：references/typography.md（每个参数的理由与可调范围）
+   约定：
+     1. 使用时必须整段内联进 <style> 标签，禁止外链（保证单文件自包含）
+     2. 调整参数只改 :root 变量，不要改下面的规则
+     3. 本样式为「浅色低眩光」基准；深色变体见文件末尾
+   ============================================================ */
+
+:root {
+  /* ---- 版式参数（冻结值：改动前先读 typography.md）---- */
+  --rv-font-size: 18px;        /* 正文基准字号，最小 17px */
+  --rv-font-size-mobile: 17px;
+  --rv-line-height: 1.9;       /* 行距，最小 1.8 */
+  --rv-measure: 760px;         /* 正文栏宽；对应每行约 30–38 汉字 */
+  --rv-pad: 28px;              /* 桌面端页边留白 */
+  --rv-pad-mobile: 18px;
+  --rv-letter-spacing: 0.02em; /* 字距微松，降低字形粘连 */
+
+  /* ---- 配色（浅色低眩光基准）---- */
+  --rv-bg:          #FBFAF7;   /* 暖白，非纯白：减轻屏幕眩光 */
+  --rv-surface:     #FFFFFF;
+  --rv-ink:         #23262B;
+  --rv-ink-soft:    #55595F;
+  --rv-line:        #E4E0D8;
+  --rv-heading:     #14171B;
+  --rv-accent:      #17646F;
+  --rv-accent-soft: #EAF2F3;
+  --rv-hl:          #FFF2C2;   /* 关键短语高亮 */
+  --rv-num:         #FBE7D2;   /* 数字 / 单位高亮 */
+  --rv-warn:        #8A5A00;
+  --rv-warn-soft:   #FCF4E3;
+  --rv-ok:          #2C6B4F;
+  --rv-ok-soft:     #EDF5F0;
+  --rv-code-bg:     #F1EFE9;
+}
+
+/* ---------- 基础 ---------- */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--rv-bg);
+  color: var(--rv-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+               "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC",
+               "Noto Sans CJK SC", sans-serif;
+  font-size: var(--rv-font-size);
+  line-height: var(--rv-line-height);
+  letter-spacing: var(--rv-letter-spacing);
+  /* 关键：绝不用两端对齐——会制造字间河流，加重跳行 */
+  text-align: left;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.page {
+  max-width: var(--rv-measure);
+  margin: 0 auto;
+  padding: 56px var(--rv-pad) 96px;
+}
+
+/* ---------- 标题 ---------- */
+h1 {
+  font-size: 30px;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: var(--rv-heading);
+  margin: 0 0 10px;
+}
+h2 {
+  font-size: 22px;
+  line-height: 1.5;
+  color: var(--rv-heading);
+  margin: 60px 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--rv-line);
+}
+h3 {
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--rv-accent);
+  margin: 34px 0 12px;
+}
+h4 { font-size: 18px; margin: 24px 0 8px; color: var(--rv-heading); }
+h1 + .sub { margin-top: 0; }
+
+.sub {
+  color: var(--rv-ink-soft);
+  font-size: 17px;
+  margin: 0 0 22px;
+}
+
+/* 标题带锚点时保留可点性，但不加下划线干扰 */
+h2 a, h3 a { color: inherit; text-decoration: none; }
+
+/* ---------- 正文段落 ---------- */
+p { margin: 0 0 16px; }
+strong { color: #101317; }
+a { color: var(--rv-accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+code {
+  font-family: Consolas, "Cascadia Mono", Menlo, "Courier New", monospace;
+  font-size: 0.88em;
+  background: var(--rv-code-bg);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+pre {
+  background: var(--rv-code-bg);
+  border: 1px solid var(--rv-line);
+  border-radius: 3px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 15px;
+  line-height: 1.7;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+ul, ol { margin: 0 0 16px; padding-left: 26px; }
+li { margin-bottom: 9px; }
+li > ul, li > ol { margin-top: 9px; margin-bottom: 4px; }
+
+blockquote {
+  margin: 18px 0;
+  padding: 2px 0 2px 18px;
+  border-left: 3px solid var(--rv-line);
+  color: var(--rv-ink-soft);
+  font-size: 17px;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+hr { border: 0; border-top: 1px solid var(--rv-line); margin: 44px 0; }
+
+img { max-width: 100%; height: auto; border-radius: 3px; }
+
+/* ---------- 高亮与强调 ---------- */
+/* 关键短语：下划线式高亮，不改变字色，避免打断阅读节奏 */
+.hl {
+  background: linear-gradient(transparent 62%, var(--rv-hl) 62%);
+  padding: 0 1px;
+}
+/* 数字 / 单位 / 时限：独立色块，便于回查 */
+.num {
+  background: var(--rv-num);
+  border-radius: 2px;
+  padding: 0 3px;
+  font-variant-numeric: tabular-nums;
+}
+mark { background: var(--rv-hl); color: inherit; padding: 0 1px; }
+
+/* 条件句提行：把「若…则…」「必须…」「不得…」单独成块 */
+.cond {
+  display: block;
+  margin: 14px 0;
+  padding: 10px 14px;
+  background: var(--rv-surface);
+  border-left: 4px solid var(--rv-accent);
+  font-weight: 600;
+}
+/* 否定词提行 */
+.neg {
+  display: block;
+  margin: 14px 0;
+  padding: 10px 14px;
+  background: var(--rv-warn-soft);
+  border-left: 4px solid var(--rv-warn);
+  font-weight: 600;
+}
+
+/* ---------- 信息盒 ---------- */
+.box {
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-line);
+  border-radius: 3px;
+  padding: 18px 22px;
+  margin: 20px 0;
+}
+.box p:last-child, .box ul:last-child, .box ol:last-child,
+.box table:last-child, .box .tw:last-child { margin-bottom: 0; }
+.box.lead { border-left: 5px solid var(--rv-accent); background: var(--rv-accent-soft); }
+.box.warn { border-left: 5px solid var(--rv-warn);   background: var(--rv-warn-soft); }
+.box.ok   { border-left: 5px solid var(--rv-ok);     background: var(--rv-ok-soft); }
+.box.plain { background: var(--rv-surface); }
+
+/* 元信息块（标题下方） */
+.meta {
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-line);
+  border-left: 5px solid var(--rv-accent);
+  padding: 16px 20px;
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--rv-ink-soft);
+  margin: 0 0 34px;
+}
+.meta b { color: var(--rv-ink); }
+
+/* ---------- 表格 ---------- */
+/* 必须包一层 .tw：窄屏横向滚动，避免整页被撑开 */
+.tw { overflow-x: auto; margin: 20px 0 26px; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.75;
+  background: var(--rv-surface);
+}
+th, td {
+  border: 1px solid var(--rv-line);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: #F3F1EB; font-weight: 600; }
+tbody tr:nth-child(even) td { background: #FCFBF8; }
+
+/* ---------- 标签与评级 ---------- */
+.tag {
+  display: inline-block;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: #EFEDE7;
+  color: var(--rv-ink-soft);
+  margin-right: 6px;
+}
+.tag.todo { background: var(--rv-warn-soft); color: var(--rv-warn); }
+.tag.ok   { background: var(--rv-ok-soft);   color: var(--rv-ok); }
+.star { white-space: nowrap; color: var(--rv-accent); letter-spacing: -1px; font-weight: 700; }
+.star.no { color: #9A9A9A; }
+
+/* ---------- 目录 ---------- */
+.toc {
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-line);
+  border-radius: 3px;
+  padding: 16px 22px;
+  margin: 0 0 40px;
+  font-size: 16px;
+  line-height: 1.9;
+}
+.toc > .toc-title { font-weight: 600; margin-bottom: 6px; color: var(--rv-heading); }
+.toc ol, .toc ul { margin: 0; padding-left: 22px; }
+.toc li { margin-bottom: 4px; }
+.toc a { color: var(--rv-ink); text-decoration: none; }
+.toc a:hover { color: var(--rv-accent); }
+
+/* ---------- 尾注 / 说明 ---------- */
+.legend { font-size: 15px; color: var(--rv-ink-soft); line-height: 1.9; }
+.foot { margin-top: 48px; font-size: 15px; color: var(--rv-ink-soft); line-height: 1.9; }
+
+/* 待填写下划线（用于可打印的记录表） */
+.fill {
+  display: inline-block;
+  min-width: 120px;
+  border-bottom: 1px dashed #B9B4A8;
+  color: #A9A49A;
+  font-size: 15px;
+  padding: 0 4px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 620px) {
+  body { font-size: var(--rv-font-size-mobile); }
+  .page { padding: 34px var(--rv-pad-mobile) 64px; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 20px; margin-top: 44px; }
+  h3 { font-size: 18px; }
+  table { font-size: 15px; }
+  th, td { padding: 8px 9px; }
+}
+
+/* ---------- 打印 ---------- */
+@media print {
+  body { background: #fff; font-size: 11.5pt; }
+  .page { max-width: none; padding: 0; }
+  h2 { page-break-after: avoid; }
+  h3 { page-break-after: avoid; }
+  table, .box, .cond, .neg, pre { page-break-inside: avoid; }
+  .toc { page-break-after: always; }
+  a { color: inherit; text-decoration: none; }
+}
+
+/* ============================================================
+   深色变体（可选）
+   用法：在 <body> 上加 class="rv-dark"
+   注意：深底浅字对部分阅读困难者反而更累；未经验证不要默认开启。
+   ============================================================ */
+body.rv-dark {
+  --rv-bg:          #12161B;
+  --rv-surface:     #1A1F26;
+  --rv-ink:         #E6E8EB;
+  --rv-ink-soft:    #A8AEB7;
+  --rv-line:        #2C333C;
+  --rv-heading:     #F4F6F8;
+  --rv-accent:      #5FBFCB;
+  --rv-accent-soft: #17262A;
+  --rv-hl:          #4A411F;
+  --rv-num:         #45331F;
+  --rv-warn:        #E0B464;
+  --rv-warn-soft:   #2A2418;
+  --rv-ok:          #7FC5A0;
+  --rv-ok-soft:     #16261F;
+  --rv-code-bg:     #232A32;
+}
+body.rv-dark strong { color: #FFFFFF; }
+body.rv-dark th { background: #222932; }
+body.rv-dark tbody tr:nth-child(even) td { background: #1E242B; }
+body.rv-dark .tag { background: #262D36; }
+ 换成 assets/reading-view.css 全文
+          → 删掉不用的块 → 把正文填进 <blockquote><p>浏览器端静态单页应用。零后端、零网络请求、零第三方库。本文档是三轮需求确认的结果，任何改动请先更新决策表 D-01 ~ D-16。</p></blockquote>
+<hr>
+<h2 id="sec-1">1. 产品定位</h2>
+<p>帮助二胡学习者（兼顾其他乐器）在浏览器里完成四件事：</p>
+<div class="tw">
+<table>
+<thead><tr>
+<th>目标</th>
+<th>对应模块</th>
+<th>一句话价值</th>
+</tr></thead>
+<tbody>
+<tr><td>练节奏</td><td>节拍器</td><td>拍子稳不稳，机器说了算</td></tr>
+<tr><td>练音准</td><td>调音器 + 跟奏音准反馈</td><td>二胡没有品位，音准全靠耳朵，这里给耳朵一个标尺</td></tr>
+<tr><td>练耳朵</td><td>听音训练</td><td>音程、和弦、旋律听写</td></tr>
+<tr><td>跟谱练习</td><td>乐谱跟练</td><td>简谱 + 指法弓法，变速循环跟练</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>不做</strong>：账号系统、云同步、社交、付费、多轨录音混音、图片谱 OCR、服务端文件上传、乐谱导入（一期）。</p>
+<hr>
+<h2 id="sec-2">2. 决策表</h2>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>决策项</th>
+<th>结论</th>
+<th>带来的影响</th>
+</tr></thead>
+<tbody>
+<tr><td>D-01</td><td>乐谱来源</td><td>一期仅内置练习谱，不做导入</td><td>不需要 OSMD / abcjs / VexFlow，谱面数据用内部 JSON schema</td></tr>
+<tr><td>D-02</td><td>交付形态</td><td>多文件 + 库 vendor 到本地</td><td>内网、离线、断网都能跑</td></tr>
+<tr><td>D-03</td><td>麦克风</td><td>启用 + 自动降级</td><td>非 HTTPS 或权限被拒时，自动隐藏麦克风相关 UI，其余功能照常</td></tr>
+<tr><td>D-04</td><td>音源</td><td>Web Audio 合成音</td><td>零体积、零依赖</td></tr>
+<tr><td>D-05</td><td>谱面呈现</td><td>简谱数字 + 音名，DOM/CSS 渲染</td><td>零依赖，可做当前音符高亮与自动滚动</td></tr>
+<tr><td>D-06</td><td>标注深度</td><td>指法常显 + 弓法可开关</td><td>两套数据都要录，默认只显示指法</td></tr>
+<tr><td>D-07</td><td>曲库范围</td><td>入门 4 首 + 基本功 + 每日基本功专项</td><td>一期约 <span class="num">12 条</span></td></tr>
+<tr><td>D-08</td><td>跟练控制</td><td>变速不变调 + A-B 循环 + 预备拍/节拍器叠加 + 当前音高亮</td><td>四项全做</td></tr>
+<tr><td>D-09</td><td>听音题型</td><td>音程听辨、和弦性质听辨、旋律听写填空</td><td>以选择题为主</td></tr>
+<tr><td>D-10</td><td>音准反馈</td><td>简化版：实时音分偏差指针，不评分</td><td>依赖麦克风，可降级</td></tr>
+<tr><td>D-11</td><td>调音器</td><td>通用十二平均律 + 常用调/常用乐器定弦预设，<strong>不写死二胡</strong></td><td>换乐器照样能用</td></tr>
+<tr><td>D-12</td><td>练习记录</td><td>只存设置，不做统计</td><td>IndexedDB 仅一个键值 store</td></tr>
+<tr><td>D-13</td><td>记号体系</td><td>标准民乐符号</td><td>拉弓 ▬、推弓 ▭、连弓 ⌒、指法 一二三四</td></tr>
+<tr><td>D-14</td><td>标注分级</td><td>入门 4 首全标指法 + 弓法；基本功只标指法</td><td>控制录入工作量（本项目最大成本项）</td></tr>
+<tr><td>D-15</td><td>视觉风格</td><td>深色工业风为主，设置中可切浅色</td><td>主色 #0F172A / #1E293B，单一强调色</td></tr>
+<tr><td>D-16</td><td>第三方库</td><td>一期 <strong>零第三方库</strong></td><td>vendor/ 目录一期为空，后续按需填充</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="sec-3">2.1 关于 D-02 与 D-16 的结论</h3>
+<p>因为选了「内置谱 + 简谱 DOM + 合成音」，一期<strong>不需要任何第三方库</strong>。所以「vendor 到本地」的策略保留为目录约定，实际 vendor/ 为空。这是一件好事：没有 CDN 依赖、没有版本冲突、没有体积负担。</p>
+<hr>
+<h2 id="sec-4">3. 功能规格</h2>
+<h3 id="sec-5">3.1 节拍器</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>功能</th>
+<th>规格</th>
+</tr></thead>
+<tbody>
+<tr><td>M-01</td><td>BPM</td><td>30–300，滑杆 + 数字输入 + Tap tempo（连敲 4 次取平均）</td></tr>
+<tr><td>M-02</td><td>拍号</td><td>2/4、3/4、4/4、6/8</td></tr>
+<tr><td>M-03</td><td>细分</td><td>整拍 / 八分 / 十六分 / 三连音</td></tr>
+<tr><td>M-04</td><td>重音</td><td>首拍重音；可扩展为「每小节第 N 拍重音」</td></tr>
+<tr><td>M-05</td><td>音色</td><td>木鱼（噪声 + 带通）、正弦短音、高频点击，三档可切</td></tr>
+<tr><td>M-06</td><td>可视化</td><td>拍点圆点跳动 + 钟摆摆动</td></tr>
+<tr><td>M-07</td><td>渐快训练</td><td>每 N 小节 +X BPM，到 M BPM 停止或循环</td></tr>
+<tr><td>M-08</td><td>静音小节</td><td>随机静音 N 小节，考验内心拍感</td></tr>
+<tr><td>M-09</td><td>音量</td><td>音量滑杆 + 静音</td></tr>
+<tr><td>M-10</td><td>精度</td><td>前瞻调度：<span class="num">25ms</span> 轮询 + <span class="num">100ms</span> 排程窗口，按 <code>audioContext.currentTime</code> 排音，<strong>禁用 setInterval 直接发声</strong></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="sec-6">3.2 调音器</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>功能</th>
+<th>规格</th>
+</tr></thead>
+<tbody>
+<tr><td>T-01</td><td>基准音</td><td>A4 = <span class="num">440 Hz</span>，可调 430–<span class="num">450 Hz</span></td></tr>
+<tr><td>T-02</td><td>检测范围</td><td>60–<span class="num">1200 Hz</span>，覆盖二胡全音域</td></tr>
+<tr><td>T-03</td><td>检测算法</td><td>时域自相关（AMDF）+ 抛物线插值，目标精度 ±3 音分</td></tr>
+<tr><td>T-04</td><td>显示</td><td>音名 + 偏差音分指针（−50 ~ +50）+ 实际频率 Hz + 稳定度指示</td></tr>
+<tr><td>T-05</td><td>定弦预设</td><td>可编辑的预设库（见 3.2.1）</td></tr>
+<tr><td>T-06</td><td>参考音</td><td>点击预设音名播放长音，用于对照校音</td></tr>
+<tr><td>T-07</td><td>降级</td><td>无麦克风 → 隐藏检测区，仅保留参考音（D-03）</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="sec-7">3.2.1 定弦预设库</h4>
+<p>二胡标准定弦为内弦 d1、外弦 a1（D4–A4，纯五度），换调不换弦高，只换弦式：</p>
+<div class="tw">
+<table>
+<thead><tr>
+<th>调</th>
+<th>弦式</th>
+<th>内弦唱名</th>
+<th>外弦唱名</th>
+<th>定弦音高</th>
+</tr></thead>
+<tbody>
+<tr><td>D 调</td><td>1-5 弦（do-sol）</td><td>do</td><td>sol</td><td>D4 – A4</td></tr>
+<tr><td>G 调</td><td>5-2 弦（sol-re）</td><td>sol</td><td>re</td><td>D4 – A4</td></tr>
+<tr><td>F 调</td><td>6-3 弦（la-mi）</td><td>la</td><td>mi</td><td>D4 – A4</td></tr>
+<tr><td>C 调</td><td>2-6 弦（re-la）</td><td>re</td><td>la</td><td>D4 – A4</td></tr>
+<tr><td>A 调</td><td>4-1 弦（fa-do）</td><td>fa</td><td>do</td><td>D4 – A4</td></tr>
+<tr><td>bB 调</td><td>3-7 弦（mi-si）</td><td>mi</td><td>si</td><td>D4 – A4</td></tr>
+<tr><td>二泉映月用弦（1=G，低五度）</td><td>5-2 弦</td><td>sol</td><td>re</td><td>G3 – D4</td></tr>
+</tbody>
+</table>
+</div>
+<p>通用乐器预设（不写死二胡，D-11）：小提琴 G3-D4-A4-E5、吉他 E2-A2-D3-G3-B3-E4、尤克里里 G4-C4-E4-A4、大提琴 C2-G2-D3-A3。</p>
+<h3 id="sec-8">3.3 听音训练</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>题型</th>
+<th>规格</th>
+</tr></thead>
+<tbody>
+<tr><td>E-01</td><td>音程听辨</td><td>播放两音（旋律/和声两种呈现），从 8–12 个音程中选；难度分级：先自然音程，后变化音程</td></tr>
+<tr><td>E-02</td><td>和弦性质听辨</td><td>判断大 / 小 / 减 / 增；进阶可加大七、属七</td></tr>
+<tr><td>E-03</td><td>旋律听写填空</td><td>播放 4–8 音短句，给出简谱骨架，隐藏 2–3 个音，用音名按钮填</td></tr>
+<tr><td>E-04</td><td>交互</td><td>播放 / 重播、答题、即时反馈（对错 + 重播正确答案做对比）</td></tr>
+<tr><td>E-05</td><td>组卷</td><td>连续 N 题一组，组末显示本组正确率</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>统计边界（D-12）</strong>：正确率只在<strong>当前会话内</strong>显示，页面刷新即清空，不写入 IndexedDB。</p>
+<h3 id="sec-9">3.4 乐谱跟练</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>功能</th>
+<th>规格</th>
+</tr></thead>
+<tbody>
+<tr><td>S-01</td><td>谱面渲染</td><td>简谱数字 + 八度点 + 音名 + 指法（常显）+ 弓法（开关，D-06）</td></tr>
+<tr><td>S-02</td><td>分行</td><td>按拍号自动分小节、按容器宽度自动折行</td></tr>
+<tr><td>S-03</td><td>跟随</td><td>当前音符高亮 + 自动滚动保持光标可见</td></tr>
+<tr><td>S-04</td><td>播放控制</td><td>播放 / 暂停 / 停止、进度拖拽</td></tr>
+<tr><td>S-05</td><td>变速</td><td>0.5x – 1.5x 无级调速，<strong>音高不变</strong></td></tr>
+<tr><td>S-06</td><td>A-B 循环</td><td>选定小节区间循环，支持拖拽选区与数字输入</td></tr>
+<tr><td>S-07</td><td>预备拍</td><td>开始前倒数一个小节，可关</td></tr>
+<tr><td>S-08</td><td>节拍器叠加</td><td>跟练时叠加节拍器打点，音量独立</td></tr>
+<tr><td>S-09</td><td>移调</td><td>±12 半音（可选，二胡换调用）</td></tr>
+<tr><td>S-10</td><td>音色</td><td>锯齿波 + <span class="num">60ms</span> 慢起音 + <span class="num">5.5Hz</span> 轻颤音（弦乐近似），设置中可切正弦 / 三角 / 锯齿</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="sec-10">3.4.1 一期曲库清单</h4>
+<p><strong>A. 入门曲目（4 首，全标指法 + 弓法）</strong></p>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>曲目</th>
+<th>调</th>
+<th>弦式</th>
+<th>建议 BPM</th>
+<th>练什么</th>
+</tr></thead>
+<tbody>
+<tr><td>P-01</td><td>小星星</td><td>D</td><td>1-5</td><td>88</td><td>五声音阶、内外弦切换</td></tr>
+<tr><td>P-02</td><td>欢乐颂</td><td>D</td><td>1-5</td><td>96</td><td>连弓与分弓</td></tr>
+<tr><td>P-03</td><td>茉莉花</td><td>D</td><td>1-5</td><td>72</td><td>民歌韵味、滑音入门</td></tr>
+<tr><td>P-04</td><td>八月桂花遍地开</td><td>D</td><td>1-5</td><td>108</td><td>基础节奏型</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>B. 每日基本功（<span class="num">8 条</span>，只标指法，D-14）</strong></p>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>项目</th>
+<th>说明</th>
+</tr></thead>
+<tbody>
+<tr><td>P-05</td><td>D 调音阶</td><td>1-5 弦，上下行，一把位</td></tr>
+<tr><td>P-06</td><td>G 调音阶</td><td>5-2 弦</td></tr>
+<tr><td>P-07</td><td>F 调音阶</td><td>6-3 弦</td></tr>
+<tr><td>P-08</td><td>五声音阶模进</td><td>三种节奏型</td></tr>
+<tr><td>P-09</td><td>内外弦交替</td><td>音阶隔音换弦</td></tr>
+<tr><td>P-10</td><td>换把练习</td><td>一把 ↔ 二把</td></tr>
+<tr><td>P-11</td><td>快弓练习</td><td>十六分音符音型</td></tr>
+<tr><td>P-12</td><td>长音揉弦</td><td>配合音准反馈做长音稳定度练习</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote><p>版权说明：以上均为传统民歌、公有领域曲目与通用基本功练习，不涉及版权曲目。赛马、二泉映月等列入二期候选。</p></blockquote>
+<h3 id="sec-11">3.5 跟奏音准反馈（简化版）</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>功能</th>
+<th>规格</th>
+</tr></thead>
+<tbody>
+<tr><td>F-01</td><td>输入</td><td>复用调音器的音高检测模块（T-03）</td></tr>
+<tr><td>F-02</td><td>比对基准</td><td>当前谱面音符，或调音器选定的目标音</td></tr>
+<tr><td>F-03</td><td>显示</td><td>偏差音分指针（−50 ~ +50）、偏高 / 偏低提示、当前检测音名</td></tr>
+<tr><td>F-04</td><td>边界</td><td><strong>不评分、不记录、不统计</strong>（D-10 + D-12）</td></tr>
+<tr><td>F-05</td><td>降级</td><td>无麦克风权限 / 非安全上下文 → 整个面板隐藏（D-03）</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="sec-12">4. 数据结构</h2>
+<h3 id="sec-13">4.1 谱面 JSON schema</h3>
+<pre><code class="language-json">{
+  "id": "xiaoxingxing",
+  "title": "小星星",
+  "category": "basic",
+  "key": "D",
+  "stringMode": "1-5",
+  "tuning": ["D4", "A4"],
+  "bpm": 88,
+  "meter": "4/4",
+  "sections": [{ "name": "A", "fromBar": 1, "toBar": 8 }],
+  "notes": [
+    {
+      "d": "1",
+      "oct": 0,
+      "p": "D4",
+      "dur": 1,
+      "f": "一",
+      "b": "▬",
+      "s": "内",
+      "tie": false,
+      "slide": null
+    }
+  ]
+}</code></pre>
+<div class="tw">
+<table>
+<thead><tr>
+<th>字段</th>
+<th>含义</th>
+<th>取值</th>
+</tr></thead>
+<tbody>
+<tr><td><code>d</code></td><td>简谱数字</td><td><code>"0"</code>–<code>"7"</code>，0 为休止</td></tr>
+<tr><td><code>oct</code></td><td>八度点</td><td><code>-1</code> 低音点、<code>0</code> 中音、<code>+1</code> 高音点</td></tr>
+<tr><td><code>p</code></td><td>科学音名</td><td>用于发声与音准比对</td></tr>
+<tr><td><code>dur</code></td><td>时值</td><td>单位 = 拍（1 = 四分音符，0.5 = 八分音符）</td></tr>
+<tr><td><code>f</code></td><td>指法</td><td><code>空</code> / <code>一</code> / <code>二</code> / <code>三</code> / <code>四</code></td></tr>
+<tr><td><code>b</code></td><td>弓法</td><td><code>▬</code> 拉弓、<code>▭</code> 推弓、<code>⌒</code> 连弓</td></tr>
+<tr><td><code>s</code></td><td>弦别</td><td><code>内</code> / <code>外</code></td></tr>
+<tr><td><code>tie</code></td><td>延音线</td><td>布尔</td></tr>
+<tr><td><code>slide</code></td><td>滑音</td><td><code>null</code> 或 <code>{ "to": "A4", "type": "up" }</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>小节线由 <code>meter</code> 与 <code>dur</code> 累计推导，不单独存。</p>
+<h3 id="sec-14">4.2 存储</h3>
+<p>IndexedDB 单库 <code>erhu-trainer</code>，单 store <code>settings</code>，键值结构 <code>{ key, value }</code>。只存：主题、基准音高、默认 BPM、音色选择、音量、弓法显示开关、最近使用的曲目。</p>
+<hr>
+<h2 id="sec-15">5. 技术架构</h2>
+<h3 id="sec-16">5.1 目录结构</h3>
+<pre><code>index.html
+css/
+  base.css            变量、重置、排版
+  layout.css          顶部导航 + 面板容器
+  metronome.css
+  tuner.css
+  ear.css
+  score.css
+js/
+  app.js              Tab 路由、模块初始化
+  core/audio.js       AudioContext 单例 + 前瞻调度器
+  core/synth.js       合成音色
+  core/pitch.js       音高检测（自相关）
+  core/notation.js    音名 / 频率 / 音分换算
+  core/store.js       IndexedDB 设置持久化
+  modules/metronome.js
+  modules/tuner.js
+  modules/ear.js
+  modules/score.js
+  data/scores.js      内置曲库
+  data/exercises.js   基本功练习
+  data/tunings.js     定弦预设
+vendor/               一期为空（D-16）
+sw.js                 离线缓存</code></pre>
+<h3 id="sec-17">5.2 关键技术点</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>要点</th>
+<th>做法</th>
+</tr></thead>
+<tbody>
+<tr><td>K-01</td><td>节奏精度</td><td>前瞻调度器：<span class="num">25ms</span> 轮询，<code>currentTime + 0.1s</code> 窗口内排音</td></tr>
+<tr><td>K-02</td><td>音高检测</td><td>AnalyserNode 时域数据 + 自相关 + 抛物线插值，2048 点窗</td></tr>
+<tr><td>K-03</td><td>降级判定</td><td><code>!window.isSecureContext</code> 或 <code>!navigator.mediaDevices?.getUserMedia</code> → 隐藏麦克风 UI</td></tr>
+<tr><td>K-04</td><td>变速不变调</td><td>只缩放 <code>dur</code> 与调度间隔，不改 <code>p</code> 的频率</td></tr>
+<tr><td>K-05</td><td>离线</td><td>Service Worker 预缓存全部静态资源</td></tr>
+<tr><td>K-06</td><td>打开方式</td><td><strong>推荐</strong> <code>python -m http.server</code> 等本地静态服务器；<code>file://</code> 下节拍器 / 听音 / 跟练全部可用，但麦克风与 Service Worker 自动失效（符合 D-03 降级设计）</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="sec-18">5.3 界面</h3>
+<p>顶部 <span class="num">5 个</span> Tab：节拍器 / 调音器 / 听音训练 / 乐谱跟练 / 设置。深色工业风（#0F172A / #1E293B + 单一强调色），设置中可切浅色。响应式，桌面为主，兼容 ≥360px 宽度。</p>
+<p>键盘快捷键：空格 = 播放/停止，<code>←</code> <code>→</code> = 调速，<code>[</code> <code>]</code> = 设 A/B 点。</p>
+<hr>
+<h2 id="sec-19">6. 验收标准</h2>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>场景</th>
+<th>预期</th>
+</tr></thead>
+<tbody>
+<tr><td>A-01</td><td>节拍器 120 BPM / 4/4 连续运行 <span class="num">5 分钟</span></td><td>累计漂移 < <span class="num">50ms</span></td></tr>
+<tr><td>A-02</td><td>节拍器切换拍号与细分</td><td>打点数量与强弱符合拍号</td></tr>
+<tr><td>A-03</td><td>调音器输入 <span class="num">440Hz</span> 标准音源</td><td>显示 A4，偏差 ±3 音分内</td></tr>
+<tr><td>A-04</td><td>调音器输入 <span class="num">293.66Hz</span></td><td>显示 D4（二胡内弦）</td></tr>
+<tr><td>A-05</td><td>禁用麦克风权限后打开</td><td>麦克风面板隐藏，参考音与其他 Tab 正常</td></tr>
+<tr><td>A-06</td><td>file:// 直接打开</td><td>节拍器、听音、跟练可用；麦克风与 SW 自动失效并给出提示</td></tr>
+<tr><td>A-07</td><td>跟练变速 0.5x</td><td>时长翻倍，音高不变</td></tr>
+<tr><td>A-08</td><td>A-B 循环</td><td>播放到 B 点立即回到 A 点，不中断</td></tr>
+<tr><td>A-09</td><td>指法 / 弓法开关</td><td>默认只显示指法，开启后叠加弓法符号</td></tr>
+<tr><td>A-10</td><td>断网（离线）打开</td><td>已缓存时全部功能可用</td></tr>
+<tr><td>A-11</td><td>设置修改后刷新</td><td>设置项保持</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="sec-20">7. 二期候选</h2>
+<ol>
+<li>导入 abc / MusicXML 谱面（需重评 D-01、D-05、D-16）
+</li>
+<li>自定义谱编辑器
+</li>
+<li>完整练习统计（日历热力图、正确率曲线、连续天数）
+</li>
+<li>单轨录音回放
+</li>
+<li>赛马、二泉映月等经典曲目
+</li>
+<li>滑音、装饰音的听感模拟
+</li>
+</ol>
+     硬约束：
+       1. 必须单文件自包含：CSS 内联，不引任何外部资源，不写 JS
+       2. 不要在正文里加 on* 事件或 <script>
+       3. 正文栏宽由 --rv-measure 控制，不要在正文里再写行内 width
+     ============================================================ -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>二胡练习工具 · 需求规格 v1.0</title>
+<style>
+/* ============================================================
+   reading-view.css — 可读版式 v1.0
+   用途：把长文本渲染成便于持续阅读的单页 HTML
+   依据：references/typography.md（每个参数的理由与可调范围）
+   约定：
+     1. 使用时必须整段内联进 <style> 标签，禁止外链（保证单文件自包含）
+     2. 调整参数只改 :root 变量，不要改下面的规则
+     3. 本样式为「浅色低眩光」基准；深色变体见文件末尾
+   ============================================================ */
+
+:root {
+  /* ---- 版式参数（冻结值：改动前先读 typography.md）---- */
+  --rv-font-size: 18px;        /* 正文基准字号，最小 17px */
+  --rv-font-size-mobile: 17px;
+  --rv-line-height: 1.9;       /* 行距，最小 1.8 */
+  --rv-measure: 760px;         /* 正文栏宽；对应每行约 30–38 汉字 */
+  --rv-pad: 28px;              /* 桌面端页边留白 */
+  --rv-pad-mobile: 18px;
+  --rv-letter-spacing: 0.02em; /* 字距微松，降低字形粘连 */
+
+  /* ---- 配色（浅色低眩光基准）---- */
+  --rv-bg:          #FBFAF7;   /* 暖白，非纯白：减轻屏幕眩光 */
+  --rv-surface:     #FFFFFF;
+  --rv-ink:         #23262B;
+  --rv-ink-soft:    #55595F;
+  --rv-line:        #E4E0D8;
+  --rv-heading:     #14171B;
+  --rv-accent:      #17646F;
+  --rv-accent-soft: #EAF2F3;
+  --rv-hl:          #FFF2C2;   /* 关键短语高亮 */
+  --rv-num:         #FBE7D2;   /* 数字 / 单位高亮 */
+  --rv-warn:        #8A5A00;
+  --rv-warn-soft:   #FCF4E3;
+  --rv-ok:          #2C6B4F;
+  --rv-ok-soft:     #EDF5F0;
+  --rv-code-bg:     #F1EFE9;
+}
+
+/* ---------- 基础 ---------- */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--rv-bg);
+  color: var(--rv-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+               "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC",
+               "Noto Sans CJK SC", sans-serif;
+  font-size: var(--rv-font-size);
+  line-height: var(--rv-line-height);
+  letter-spacing: var(--rv-letter-spacing);
+  /* 关键：绝不用两端对齐——会制造字间河流，加重跳行 */
+  text-align: left;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.page {
+  max-width: var(--rv-measure);
+  margin: 0 auto;
+  padding: 56px var(--rv-pad) 96px;
+}
+
+/* ---------- 标题 ---------- */
+h1 {
+  font-size: 30px;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: var(--rv-heading);
+  margin: 0 0 10px;
+}
+h2 {
+  font-size: 22px;
+  line-height: 1.5;
+  color: var(--rv-heading);
+  margin: 60px 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--rv-line);
+}
+h3 {
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--rv-accent);
+  margin: 34px 0 12px;
+}
+h4 { font-size: 18px; margin: 24px 0 8px; color: var(--rv-heading); }
+h1 + .sub { margin-top: 0; }
+
+.sub {
+  color: var(--rv-ink-soft);
+  font-size: 17px;
+  margin: 0 0 22px;
+}
+
+/* 标题带锚点时保留可点性，但不加下划线干扰 */
+h2 a, h3 a { color: inherit; text-decoration: none; }
+
+/* ---------- 正文段落 ---------- */
+p { margin: 0 0 16px; }
+strong { color: #101317; }
+a { color: var(--rv-accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+code {
+  font-family: Consolas, "Cascadia Mono", Menlo, "Courier New", monospace;
+  font-size: 0.88em;
+  background: var(--rv-code-bg);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+pre {
+  background: var(--rv-code-bg);
+  border: 1px solid var(--rv-line);
+  border-radius: 3px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 15px;
+  line-height: 1.7;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+ul, ol { margin: 0 0 16px; padding-left: 26px; }
+li { margin-bottom: 9px; }
+li > ul, li > ol { margin-top: 9px; margin-bottom: 4px; }
+
+blockquote {
+  margin: 18px 0;
+  padding: 2px 0 2px 18px;
+  border-left: 3px solid var(--rv-line);
+  color: var(--rv-ink-soft);
+  font-size: 17px;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+hr { border: 0; border-top: 1px solid var(--rv-line); margin: 44px 0; }
+
+img { max-width: 100%; height: auto; border-radius: 3px; }
+
+/* ---------- 高亮与强调 ---------- */
+/* 关键短语：下划线式高亮，不改变字色，避免打断阅读节奏 */
+.hl {
+  background: linear-gradient(transparent 62%, var(--rv-hl) 62%);
+  padding: 0 1px;
+}
+/* 数字 / 单位 / 时限：独立色块，便于回查 */
+.num {
+  background: var(--rv-num);
+  border-radius: 2px;
+  padding: 0 3px;
+  font-variant-numeric: tabular-nums;
+}
+mark { background: var(--rv-hl); color: inherit; padding: 0 1px; }
+
+/* 条件句提行：把「若…则…」「必须…」「不得…」单独成块 */
+.cond {
+  display: block;
+  margin: 14px 0;
+  padding: 10px 14px;
+  background: var(--rv-surface);
+  border-left: 4px solid var(--rv-accent);
+  font-weight: 600;
+}
+/* 否定词提行 */
+.neg {
+  display: block;
+  margin: 14px 0;
+  padding: 10px 14px;
+  background: var(--rv-warn-soft);
+  border-left: 4px solid var(--rv-warn);
+  font-weight: 600;
+}
+
+/* ---------- 信息盒 ---------- */
+.box {
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-line);
+  border-radius: 3px;
+  padding: 18px 22px;
+  margin: 20px 0;
+}
+.box p:last-child, .box ul:last-child, .box ol:last-child,
+.box table:last-child, .box .tw:last-child { margin-bottom: 0; }
+.box.lead { border-left: 5px solid var(--rv-accent); background: var(--rv-accent-soft); }
+.box.warn { border-left: 5px solid var(--rv-warn);   background: var(--rv-warn-soft); }
+.box.ok   { border-left: 5px solid var(--rv-ok);     background: var(--rv-ok-soft); }
+.box.plain { background: var(--rv-surface); }
+
+/* 元信息块（标题下方） */
+.meta {
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-line);
+  border-left: 5px solid var(--rv-accent);
+  padding: 16px 20px;
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--rv-ink-soft);
+  margin: 0 0 34px;
+}
+.meta b { color: var(--rv-ink); }
+
+/* ---------- 表格 ---------- */
+/* 必须包一层 .tw：窄屏横向滚动，避免整页被撑开 */
+.tw { overflow-x: auto; margin: 20px 0 26px; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.75;
+  background: var(--rv-surface);
+}
+th, td {
+  border: 1px solid var(--rv-line);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: #F3F1EB; font-weight: 600; }
+tbody tr:nth-child(even) td { background: #FCFBF8; }
+
+/* ---------- 标签与评级 ---------- */
+.tag {
+  display: inline-block;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: #EFEDE7;
+  color: var(--rv-ink-soft);
+  margin-right: 6px;
+}
+.tag.todo { background: var(--rv-warn-soft); color: var(--rv-warn); }
+.tag.ok   { background: var(--rv-ok-soft);   color: var(--rv-ok); }
+.star { white-space: nowrap; color: var(--rv-accent); letter-spacing: -1px; font-weight: 700; }
+.star.no { color: #9A9A9A; }
+
+/* ---------- 目录 ---------- */
+.toc {
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-line);
+  border-radius: 3px;
+  padding: 16px 22px;
+  margin: 0 0 40px;
+  font-size: 16px;
+  line-height: 1.9;
+}
+.toc > .toc-title { font-weight: 600; margin-bottom: 6px; color: var(--rv-heading); }
+.toc ol, .toc ul { margin: 0; padding-left: 22px; }
+.toc li { margin-bottom: 4px; }
+.toc a { color: var(--rv-ink); text-decoration: none; }
+.toc a:hover { color: var(--rv-accent); }
+
+/* ---------- 尾注 / 说明 ---------- */
+.legend { font-size: 15px; color: var(--rv-ink-soft); line-height: 1.9; }
+.foot { margin-top: 48px; font-size: 15px; color: var(--rv-ink-soft); line-height: 1.9; }
+
+/* 待填写下划线（用于可打印的记录表） */
+.fill {
+  display: inline-block;
+  min-width: 120px;
+  border-bottom: 1px dashed #B9B4A8;
+  color: #A9A49A;
+  font-size: 15px;
+  padding: 0 4px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 620px) {
+  body { font-size: var(--rv-font-size-mobile); }
+  .page { padding: 34px var(--rv-pad-mobile) 64px; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 20px; margin-top: 44px; }
+  h3 { font-size: 18px; }
+  table { font-size: 15px; }
+  th, td { padding: 8px 9px; }
+}
+
+/* ---------- 打印 ---------- */
+@media print {
+  body { background: #fff; font-size: 11.5pt; }
+  .page { max-width: none; padding: 0; }
+  h2 { page-break-after: avoid; }
+  h3 { page-break-after: avoid; }
+  table, .box, .cond, .neg, pre { page-break-inside: avoid; }
+  .toc { page-break-after: always; }
+  a { color: inherit; text-decoration: none; }
+}
+
+/* ============================================================
+   深色变体（可选）
+   用法：在 <body> 上加 class="rv-dark"
+   注意：深底浅字对部分阅读困难者反而更累；未经验证不要默认开启。
+   ============================================================ */
+body.rv-dark {
+  --rv-bg:          #12161B;
+  --rv-surface:     #1A1F26;
+  --rv-ink:         #E6E8EB;
+  --rv-ink-soft:    #A8AEB7;
+  --rv-line:        #2C333C;
+  --rv-heading:     #F4F6F8;
+  --rv-accent:      #5FBFCB;
+  --rv-accent-soft: #17262A;
+  --rv-hl:          #4A411F;
+  --rv-num:         #45331F;
+  --rv-warn:        #E0B464;
+  --rv-warn-soft:   #2A2418;
+  --rv-ok:          #7FC5A0;
+  --rv-ok-soft:     #16261F;
+  --rv-code-bg:     #232A32;
+}
+body.rv-dark strong { color: #FFFFFF; }
+body.rv-dark th { background: #222932; }
+body.rv-dark tbody tr:nth-child(even) td { background: #1E242B; }
+body.rv-dark .tag { background: #262D36; }
+
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>二胡练习工具 · 需求规格 v1.0</h1>
+
+  <div class="meta"><b>版本：</b>v1.0<br>
+    <b>日期：</b>2026-09-23<br>
+    <b>状态：</b>需求已确认，待开发</div>
+  <div class="toc">
+<div class="toc-title">目录</div>
+<ol>
+<li><a href="#sec-1">1. 产品定位</a>
+</li>
+<li><a href="#sec-2">2. 决策表</a>
+<ul>
+<li><a href="#sec-3">2.1 关于 D-02 与 D-16 的结论</a></li>
+</ul>
+</li>
+<li><a href="#sec-4">3. 功能规格</a>
+<ul>
+<li><a href="#sec-5">3.1 节拍器</a></li>
+<li><a href="#sec-6">3.2 调音器</a></li>
+<li><a href="#sec-8">3.3 听音训练</a></li>
+<li><a href="#sec-9">3.4 乐谱跟练</a></li>
+<li><a href="#sec-11">3.5 跟奏音准反馈（简化版）</a></li>
+</ul>
+</li>
+<li><a href="#sec-12">4. 数据结构</a>
+<ul>
+<li><a href="#sec-13">4.1 谱面 JSON schema</a></li>
+<li><a href="#sec-14">4.2 存储</a></li>
+</ul>
+</li>
+<li><a href="#sec-15">5. 技术架构</a>
+<ul>
+<li><a href="#sec-16">5.1 目录结构</a></li>
+<li><a href="#sec-17">5.2 关键技术点</a></li>
+<li><a href="#sec-18">5.3 界面</a></li>
+</ul>
+</li>
+<li><a href="#sec-19">6. 验收标准</a>
+</li>
+<li><a href="#sec-20">7. 二期候选</a>
+</li>
+</ol>
+</div>
+<blockquote><p>浏览器端静态单页应用。零后端、零网络请求、零第三方库。本文档是三轮需求确认的结果，任何改动请先更新决策表 D-01 ~ D-16。</p></blockquote>
+<hr>
+<h2 id="sec-1">1. 产品定位</h2>
+<p>帮助二胡学习者（兼顾其他乐器）在浏览器里完成四件事：</p>
+<div class="tw">
+<table>
+<thead><tr>
+<th>目标</th>
+<th>对应模块</th>
+<th>一句话价值</th>
+</tr></thead>
+<tbody>
+<tr><td>练节奏</td><td>节拍器</td><td>拍子稳不稳，机器说了算</td></tr>
+<tr><td>练音准</td><td>调音器 + 跟奏音准反馈</td><td>二胡没有品位，音准全靠耳朵，这里给耳朵一个标尺</td></tr>
+<tr><td>练耳朵</td><td>听音训练</td><td>音程、和弦、旋律听写</td></tr>
+<tr><td>跟谱练习</td><td>乐谱跟练</td><td>简谱 + 指法弓法，变速循环跟练</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>不做</strong>：账号系统、云同步、社交、付费、多轨录音混音、图片谱 OCR、服务端文件上传、乐谱导入（一期）。</p>
+<hr>
+<h2 id="sec-2">2. 决策表</h2>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>决策项</th>
+<th>结论</th>
+<th>带来的影响</th>
+</tr></thead>
+<tbody>
+<tr><td>D-01</td><td>乐谱来源</td><td>一期仅内置练习谱，不做导入</td><td>不需要 OSMD / abcjs / VexFlow，谱面数据用内部 JSON schema</td></tr>
+<tr><td>D-02</td><td>交付形态</td><td>多文件 + 库 vendor 到本地</td><td>内网、离线、断网都能跑</td></tr>
+<tr><td>D-03</td><td>麦克风</td><td>启用 + 自动降级</td><td>非 HTTPS 或权限被拒时，自动隐藏麦克风相关 UI，其余功能照常</td></tr>
+<tr><td>D-04</td><td>音源</td><td>Web Audio 合成音</td><td>零体积、零依赖</td></tr>
+<tr><td>D-05</td><td>谱面呈现</td><td>简谱数字 + 音名，DOM/CSS 渲染</td><td>零依赖，可做当前音符高亮与自动滚动</td></tr>
+<tr><td>D-06</td><td>标注深度</td><td>指法常显 + 弓法可开关</td><td>两套数据都要录，默认只显示指法</td></tr>
+<tr><td>D-07</td><td>曲库范围</td><td>入门 4 首 + 基本功 + 每日基本功专项</td><td>一期约 <span class="num">12 条</span></td></tr>
+<tr><td>D-08</td><td>跟练控制</td><td>变速不变调 + A-B 循环 + 预备拍/节拍器叠加 + 当前音高亮</td><td>四项全做</td></tr>
+<tr><td>D-09</td><td>听音题型</td><td>音程听辨、和弦性质听辨、旋律听写填空</td><td>以选择题为主</td></tr>
+<tr><td>D-10</td><td>音准反馈</td><td>简化版：实时音分偏差指针，不评分</td><td>依赖麦克风，可降级</td></tr>
+<tr><td>D-11</td><td>调音器</td><td>通用十二平均律 + 常用调/常用乐器定弦预设，<strong>不写死二胡</strong></td><td>换乐器照样能用</td></tr>
+<tr><td>D-12</td><td>练习记录</td><td>只存设置，不做统计</td><td>IndexedDB 仅一个键值 store</td></tr>
+<tr><td>D-13</td><td>记号体系</td><td>标准民乐符号</td><td>拉弓 ▬、推弓 ▭、连弓 ⌒、指法 一二三四</td></tr>
+<tr><td>D-14</td><td>标注分级</td><td>入门 4 首全标指法 + 弓法；基本功只标指法</td><td>控制录入工作量（本项目最大成本项）</td></tr>
+<tr><td>D-15</td><td>视觉风格</td><td>深色工业风为主，设置中可切浅色</td><td>主色 #0F172A / #1E293B，单一强调色</td></tr>
+<tr><td>D-16</td><td>第三方库</td><td>一期 <strong>零第三方库</strong></td><td>vendor/ 目录一期为空，后续按需填充</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="sec-3">2.1 关于 D-02 与 D-16 的结论</h3>
+<p>因为选了「内置谱 + 简谱 DOM + 合成音」，一期<strong>不需要任何第三方库</strong>。所以「vendor 到本地」的策略保留为目录约定，实际 vendor/ 为空。这是一件好事：没有 CDN 依赖、没有版本冲突、没有体积负担。</p>
+<hr>
+<h2 id="sec-4">3. 功能规格</h2>
+<h3 id="sec-5">3.1 节拍器</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>功能</th>
+<th>规格</th>
+</tr></thead>
+<tbody>
+<tr><td>M-01</td><td>BPM</td><td>30–300，滑杆 + 数字输入 + Tap tempo（连敲 4 次取平均）</td></tr>
+<tr><td>M-02</td><td>拍号</td><td>2/4、3/4、4/4、6/8</td></tr>
+<tr><td>M-03</td><td>细分</td><td>整拍 / 八分 / 十六分 / 三连音</td></tr>
+<tr><td>M-04</td><td>重音</td><td>首拍重音；可扩展为「每小节第 N 拍重音」</td></tr>
+<tr><td>M-05</td><td>音色</td><td>木鱼（噪声 + 带通）、正弦短音、高频点击，三档可切</td></tr>
+<tr><td>M-06</td><td>可视化</td><td>拍点圆点跳动 + 钟摆摆动</td></tr>
+<tr><td>M-07</td><td>渐快训练</td><td>每 N 小节 +X BPM，到 M BPM 停止或循环</td></tr>
+<tr><td>M-08</td><td>静音小节</td><td>随机静音 N 小节，考验内心拍感</td></tr>
+<tr><td>M-09</td><td>音量</td><td>音量滑杆 + 静音</td></tr>
+<tr><td>M-10</td><td>精度</td><td>前瞻调度：<span class="num">25ms</span> 轮询 + <span class="num">100ms</span> 排程窗口，按 <code>audioContext.currentTime</code> 排音，<strong>禁用 setInterval 直接发声</strong></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="sec-6">3.2 调音器</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>功能</th>
+<th>规格</th>
+</tr></thead>
+<tbody>
+<tr><td>T-01</td><td>基准音</td><td>A4 = <span class="num">440 Hz</span>，可调 430–<span class="num">450 Hz</span></td></tr>
+<tr><td>T-02</td><td>检测范围</td><td>60–<span class="num">1200 Hz</span>，覆盖二胡全音域</td></tr>
+<tr><td>T-03</td><td>检测算法</td><td>时域自相关（AMDF）+ 抛物线插值，目标精度 ±3 音分</td></tr>
+<tr><td>T-04</td><td>显示</td><td>音名 + 偏差音分指针（−50 ~ +50）+ 实际频率 Hz + 稳定度指示</td></tr>
+<tr><td>T-05</td><td>定弦预设</td><td>可编辑的预设库（见 3.2.1）</td></tr>
+<tr><td>T-06</td><td>参考音</td><td>点击预设音名播放长音，用于对照校音</td></tr>
+<tr><td>T-07</td><td>降级</td><td>无麦克风 → 隐藏检测区，仅保留参考音（D-03）</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="sec-7">3.2.1 定弦预设库</h4>
+<p>二胡标准定弦为内弦 d1、外弦 a1（D4–A4，纯五度），换调不换弦高，只换弦式：</p>
+<div class="tw">
+<table>
+<thead><tr>
+<th>调</th>
+<th>弦式</th>
+<th>内弦唱名</th>
+<th>外弦唱名</th>
+<th>定弦音高</th>
+</tr></thead>
+<tbody>
+<tr><td>D 调</td><td>1-5 弦（do-sol）</td><td>do</td><td>sol</td><td>D4 – A4</td></tr>
+<tr><td>G 调</td><td>5-2 弦（sol-re）</td><td>sol</td><td>re</td><td>D4 – A4</td></tr>
+<tr><td>F 调</td><td>6-3 弦（la-mi）</td><td>la</td><td>mi</td><td>D4 – A4</td></tr>
+<tr><td>C 调</td><td>2-6 弦（re-la）</td><td>re</td><td>la</td><td>D4 – A4</td></tr>
+<tr><td>A 调</td><td>4-1 弦（fa-do）</td><td>fa</td><td>do</td><td>D4 – A4</td></tr>
+<tr><td>bB 调</td><td>3-7 弦（mi-si）</td><td>mi</td><td>si</td><td>D4 – A4</td></tr>
+<tr><td>二泉映月用弦（1=G，低五度）</td><td>5-2 弦</td><td>sol</td><td>re</td><td>G3 – D4</td></tr>
+</tbody>
+</table>
+</div>
+<p>通用乐器预设（不写死二胡，D-11）：小提琴 G3-D4-A4-E5、吉他 E2-A2-D3-G3-B3-E4、尤克里里 G4-C4-E4-A4、大提琴 C2-G2-D3-A3。</p>
+<h3 id="sec-8">3.3 听音训练</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>题型</th>
+<th>规格</th>
+</tr></thead>
+<tbody>
+<tr><td>E-01</td><td>音程听辨</td><td>播放两音（旋律/和声两种呈现），从 8–12 个音程中选；难度分级：先自然音程，后变化音程</td></tr>
+<tr><td>E-02</td><td>和弦性质听辨</td><td>判断大 / 小 / 减 / 增；进阶可加大七、属七</td></tr>
+<tr><td>E-03</td><td>旋律听写填空</td><td>播放 4–8 音短句，给出简谱骨架，隐藏 2–3 个音，用音名按钮填</td></tr>
+<tr><td>E-04</td><td>交互</td><td>播放 / 重播、答题、即时反馈（对错 + 重播正确答案做对比）</td></tr>
+<tr><td>E-05</td><td>组卷</td><td>连续 N 题一组，组末显示本组正确率</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>统计边界（D-12）</strong>：正确率只在<strong>当前会话内</strong>显示，页面刷新即清空，不写入 IndexedDB。</p>
+<h3 id="sec-9">3.4 乐谱跟练</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>功能</th>
+<th>规格</th>
+</tr></thead>
+<tbody>
+<tr><td>S-01</td><td>谱面渲染</td><td>简谱数字 + 八度点 + 音名 + 指法（常显）+ 弓法（开关，D-06）</td></tr>
+<tr><td>S-02</td><td>分行</td><td>按拍号自动分小节、按容器宽度自动折行</td></tr>
+<tr><td>S-03</td><td>跟随</td><td>当前音符高亮 + 自动滚动保持光标可见</td></tr>
+<tr><td>S-04</td><td>播放控制</td><td>播放 / 暂停 / 停止、进度拖拽</td></tr>
+<tr><td>S-05</td><td>变速</td><td>0.5x – 1.5x 无级调速，<strong>音高不变</strong></td></tr>
+<tr><td>S-06</td><td>A-B 循环</td><td>选定小节区间循环，支持拖拽选区与数字输入</td></tr>
+<tr><td>S-07</td><td>预备拍</td><td>开始前倒数一个小节，可关</td></tr>
+<tr><td>S-08</td><td>节拍器叠加</td><td>跟练时叠加节拍器打点，音量独立</td></tr>
+<tr><td>S-09</td><td>移调</td><td>±12 半音（可选，二胡换调用）</td></tr>
+<tr><td>S-10</td><td>音色</td><td>锯齿波 + <span class="num">60ms</span> 慢起音 + <span class="num">5.5Hz</span> 轻颤音（弦乐近似），设置中可切正弦 / 三角 / 锯齿</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="sec-10">3.4.1 一期曲库清单</h4>
+<p><strong>A. 入门曲目（4 首，全标指法 + 弓法）</strong></p>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>曲目</th>
+<th>调</th>
+<th>弦式</th>
+<th>建议 BPM</th>
+<th>练什么</th>
+</tr></thead>
+<tbody>
+<tr><td>P-01</td><td>小星星</td><td>D</td><td>1-5</td><td>88</td><td>五声音阶、内外弦切换</td></tr>
+<tr><td>P-02</td><td>欢乐颂</td><td>D</td><td>1-5</td><td>96</td><td>连弓与分弓</td></tr>
+<tr><td>P-03</td><td>茉莉花</td><td>D</td><td>1-5</td><td>72</td><td>民歌韵味、滑音入门</td></tr>
+<tr><td>P-04</td><td>八月桂花遍地开</td><td>D</td><td>1-5</td><td>108</td><td>基础节奏型</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>B. 每日基本功（<span class="num">8 条</span>，只标指法，D-14）</strong></p>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>项目</th>
+<th>说明</th>
+</tr></thead>
+<tbody>
+<tr><td>P-05</td><td>D 调音阶</td><td>1-5 弦，上下行，一把位</td></tr>
+<tr><td>P-06</td><td>G 调音阶</td><td>5-2 弦</td></tr>
+<tr><td>P-07</td><td>F 调音阶</td><td>6-3 弦</td></tr>
+<tr><td>P-08</td><td>五声音阶模进</td><td>三种节奏型</td></tr>
+<tr><td>P-09</td><td>内外弦交替</td><td>音阶隔音换弦</td></tr>
+<tr><td>P-10</td><td>换把练习</td><td>一把 ↔ 二把</td></tr>
+<tr><td>P-11</td><td>快弓练习</td><td>十六分音符音型</td></tr>
+<tr><td>P-12</td><td>长音揉弦</td><td>配合音准反馈做长音稳定度练习</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote><p>版权说明：以上均为传统民歌、公有领域曲目与通用基本功练习，不涉及版权曲目。赛马、二泉映月等列入二期候选。</p></blockquote>
+<h3 id="sec-11">3.5 跟奏音准反馈（简化版）</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>功能</th>
+<th>规格</th>
+</tr></thead>
+<tbody>
+<tr><td>F-01</td><td>输入</td><td>复用调音器的音高检测模块（T-03）</td></tr>
+<tr><td>F-02</td><td>比对基准</td><td>当前谱面音符，或调音器选定的目标音</td></tr>
+<tr><td>F-03</td><td>显示</td><td>偏差音分指针（−50 ~ +50）、偏高 / 偏低提示、当前检测音名</td></tr>
+<tr><td>F-04</td><td>边界</td><td><strong>不评分、不记录、不统计</strong>（D-10 + D-12）</td></tr>
+<tr><td>F-05</td><td>降级</td><td>无麦克风权限 / 非安全上下文 → 整个面板隐藏（D-03）</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="sec-12">4. 数据结构</h2>
+<h3 id="sec-13">4.1 谱面 JSON schema</h3>
+<pre><code class="language-json">{
+  "id": "xiaoxingxing",
+  "title": "小星星",
+  "category": "basic",
+  "key": "D",
+  "stringMode": "1-5",
+  "tuning": ["D4", "A4"],
+  "bpm": 88,
+  "meter": "4/4",
+  "sections": [{ "name": "A", "fromBar": 1, "toBar": 8 }],
+  "notes": [
+    {
+      "d": "1",
+      "oct": 0,
+      "p": "D4",
+      "dur": 1,
+      "f": "一",
+      "b": "▬",
+      "s": "内",
+      "tie": false,
+      "slide": null
+    }
+  ]
+}</code></pre>
+<div class="tw">
+<table>
+<thead><tr>
+<th>字段</th>
+<th>含义</th>
+<th>取值</th>
+</tr></thead>
+<tbody>
+<tr><td><code>d</code></td><td>简谱数字</td><td><code>"0"</code>–<code>"7"</code>，0 为休止</td></tr>
+<tr><td><code>oct</code></td><td>八度点</td><td><code>-1</code> 低音点、<code>0</code> 中音、<code>+1</code> 高音点</td></tr>
+<tr><td><code>p</code></td><td>科学音名</td><td>用于发声与音准比对</td></tr>
+<tr><td><code>dur</code></td><td>时值</td><td>单位 = 拍（1 = 四分音符，0.5 = 八分音符）</td></tr>
+<tr><td><code>f</code></td><td>指法</td><td><code>空</code> / <code>一</code> / <code>二</code> / <code>三</code> / <code>四</code></td></tr>
+<tr><td><code>b</code></td><td>弓法</td><td><code>▬</code> 拉弓、<code>▭</code> 推弓、<code>⌒</code> 连弓</td></tr>
+<tr><td><code>s</code></td><td>弦别</td><td><code>内</code> / <code>外</code></td></tr>
+<tr><td><code>tie</code></td><td>延音线</td><td>布尔</td></tr>
+<tr><td><code>slide</code></td><td>滑音</td><td><code>null</code> 或 <code>{ "to": "A4", "type": "up" }</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>小节线由 <code>meter</code> 与 <code>dur</code> 累计推导，不单独存。</p>
+<h3 id="sec-14">4.2 存储</h3>
+<p>IndexedDB 单库 <code>erhu-trainer</code>，单 store <code>settings</code>，键值结构 <code>{ key, value }</code>。只存：主题、基准音高、默认 BPM、音色选择、音量、弓法显示开关、最近使用的曲目。</p>
+<hr>
+<h2 id="sec-15">5. 技术架构</h2>
+<h3 id="sec-16">5.1 目录结构</h3>
+<pre><code>index.html
+css/
+  base.css            变量、重置、排版
+  layout.css          顶部导航 + 面板容器
+  metronome.css
+  tuner.css
+  ear.css
+  score.css
+js/
+  app.js              Tab 路由、模块初始化
+  core/audio.js       AudioContext 单例 + 前瞻调度器
+  core/synth.js       合成音色
+  core/pitch.js       音高检测（自相关）
+  core/notation.js    音名 / 频率 / 音分换算
+  core/store.js       IndexedDB 设置持久化
+  modules/metronome.js
+  modules/tuner.js
+  modules/ear.js
+  modules/score.js
+  data/scores.js      内置曲库
+  data/exercises.js   基本功练习
+  data/tunings.js     定弦预设
+vendor/               一期为空（D-16）
+sw.js                 离线缓存</code></pre>
+<h3 id="sec-17">5.2 关键技术点</h3>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>要点</th>
+<th>做法</th>
+</tr></thead>
+<tbody>
+<tr><td>K-01</td><td>节奏精度</td><td>前瞻调度器：<span class="num">25ms</span> 轮询，<code>currentTime + 0.1s</code> 窗口内排音</td></tr>
+<tr><td>K-02</td><td>音高检测</td><td>AnalyserNode 时域数据 + 自相关 + 抛物线插值，2048 点窗</td></tr>
+<tr><td>K-03</td><td>降级判定</td><td><code>!window.isSecureContext</code> 或 <code>!navigator.mediaDevices?.getUserMedia</code> → 隐藏麦克风 UI</td></tr>
+<tr><td>K-04</td><td>变速不变调</td><td>只缩放 <code>dur</code> 与调度间隔，不改 <code>p</code> 的频率</td></tr>
+<tr><td>K-05</td><td>离线</td><td>Service Worker 预缓存全部静态资源</td></tr>
+<tr><td>K-06</td><td>打开方式</td><td><strong>推荐</strong> <code>python -m http.server</code> 等本地静态服务器；<code>file://</code> 下节拍器 / 听音 / 跟练全部可用，但麦克风与 Service Worker 自动失效（符合 D-03 降级设计）</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="sec-18">5.3 界面</h3>
+<p>顶部 <span class="num">5 个</span> Tab：节拍器 / 调音器 / 听音训练 / 乐谱跟练 / 设置。深色工业风（#0F172A / #1E293B + 单一强调色），设置中可切浅色。响应式，桌面为主，兼容 ≥360px 宽度。</p>
+<p>键盘快捷键：空格 = 播放/停止，<code>←</code> <code>→</code> = 调速，<code>[</code> <code>]</code> = 设 A/B 点。</p>
+<hr>
+<h2 id="sec-19">6. 验收标准</h2>
+<div class="tw">
+<table>
+<thead><tr>
+<th>编号</th>
+<th>场景</th>
+<th>预期</th>
+</tr></thead>
+<tbody>
+<tr><td>A-01</td><td>节拍器 120 BPM / 4/4 连续运行 <span class="num">5 分钟</span></td><td>累计漂移 < <span class="num">50ms</span></td></tr>
+<tr><td>A-02</td><td>节拍器切换拍号与细分</td><td>打点数量与强弱符合拍号</td></tr>
+<tr><td>A-03</td><td>调音器输入 <span class="num">440Hz</span> 标准音源</td><td>显示 A4，偏差 ±3 音分内</td></tr>
+<tr><td>A-04</td><td>调音器输入 <span class="num">293.66Hz</span></td><td>显示 D4（二胡内弦）</td></tr>
+<tr><td>A-05</td><td>禁用麦克风权限后打开</td><td>麦克风面板隐藏，参考音与其他 Tab 正常</td></tr>
+<tr><td>A-06</td><td>file:// 直接打开</td><td>节拍器、听音、跟练可用；麦克风与 SW 自动失效并给出提示</td></tr>
+<tr><td>A-07</td><td>跟练变速 0.5x</td><td>时长翻倍，音高不变</td></tr>
+<tr><td>A-08</td><td>A-B 循环</td><td>播放到 B 点立即回到 A 点，不中断</td></tr>
+<tr><td>A-09</td><td>指法 / 弓法开关</td><td>默认只显示指法，开启后叠加弓法符号</td></tr>
+<tr><td>A-10</td><td>断网（离线）打开</td><td>已缓存时全部功能可用</td></tr>
+<tr><td>A-11</td><td>设置修改后刷新</td><td>设置项保持</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="sec-20">7. 二期候选</h2>
+<ol>
+<li>导入 abc / MusicXML 谱面（需重评 D-01、D-05、D-16）
+</li>
+<li>自定义谱编辑器
+</li>
+<li>完整练习统计（日历热力图、正确率曲线、连续天数）
+</li>
+<li>单轨录音回放
+</li>
+<li>赛马、二泉映月等经典曲目
+</li>
+<li>滑音、装饰音的听感模拟
+</li>
+</ol>
+
+
+</div>
+</body>
+</html>

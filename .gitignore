@@ -1,0 +1,22 @@
+# ===== Editor / IDE workspace files =====
+.vs/
+.DS_Store
+Thumbs.db
+
+# ===== Dependencies (project is zero-dependency, but keep guard) =====
+node_modules/
+
+# ===== Temp files (see PUBLISHING.md step 4) =====
+*.tmp
+.tmp-*
+tmp/
+
+# ===== Tooling output: fetched reference score images (binary, regenerable) =====
+erhu-trainer/tools/score-img-liutianhua/
+
+# ===== Backup data dumps (not source) =====
+erhu-trainer/tools/backup-removed-*.json
+
+# ===== WorkBuddy internal tooling data (not project source) =====
+.workbuddy/
+.wbapp_*.genie

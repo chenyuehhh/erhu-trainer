@@ -1,0 +1,67 @@
+/* ear.css — 听音训练 */
+.ear-top { display: flex; gap: 14px; align-items: end; flex-wrap: wrap; margin-bottom: 16px; }
+.ear-progress { font-family: var(--mono); color: var(--text-dim); font-size: 14px; }
+.ear-progress b { color: var(--accent); }
+
+.ear-stage { text-align: center; padding: 22px 16px; }
+.ear-question { font-size: 15px; color: var(--text-dim); margin-bottom: 18px; }
+.ear-question b { color: var(--text); }
+
+.ear-options { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 16px 0 6px; }
+.ear-options button { min-width: 92px; padding: 10px 14px; font-size: 15px; }
+.ear-options button.correct { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
+.ear-options button.wrong { border-color: var(--err); color: var(--err); background: var(--err-soft); }
+.ear-options button:disabled { cursor: default; opacity: 1; }
+
+.ear-feedback { min-height: 30px; margin-top: 10px; font-size: 15px; }
+.ear-feedback.ok { color: var(--ok); }
+.ear-feedback.err { color: var(--err); }
+
+.ear-actions { display: flex; justify-content: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+/* 旋律听写 */
+.dict-slots { display: flex; justify-content: center; gap: 8px; margin: 14px 0; flex-wrap: wrap; }
+.dict-slot {
+  width: 46px; height: 54px; border-radius: 8px; border: 1px solid var(--border-strong);
+  background: var(--panel-2); display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; font-family: var(--mono); position: relative;
+}
+.dict-slot.filled { border-color: var(--accent); color: var(--accent); cursor: pointer; }
+.dict-slot.fixed { color: var(--text); }
+.dict-slot.ok { border-color: var(--ok); color: var(--ok); }
+.dict-slot.bad { border-color: var(--err); color: var(--err); }
+.dict-slot .oct-up::before, .dict-slot .oct-down::after {
+  content: "·"; position: absolute; left: 0; right: 0; text-align: center; font-size: 16px;
+}
+.dict-slot .oct-up::before { top: 1px; }
+.dict-slot .oct-down::after { bottom: 1px; }
+
+.dict-palette { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.dict-palette button { min-width: 46px; font-family: var(--mono); font-weight: 600; }
+
+/* 组末总结 */
+.ear-summary { text-align: center; padding: 10px 0; }
+.ear-summary .big {
+  font-size: 46px; font-weight: 800; font-family: var(--mono); color: var(--accent);
+}
+.ear-summary table { margin: 14px auto 0; border-collapse: collapse; font-size: 14px; }
+.ear-summary td, .ear-summary th { padding: 5px 16px; border-bottom: 1px solid var(--border); }
+.ear-summary td.mono { font-family: var(--mono); }
+
+.ear-streak { font-size: 13px; color: var(--text-faint); margin-top: 8px; }
+
+@media (max-width: 640px) {
+  .ear-top { gap: 10px; margin-bottom: 12px; }
+  .ear-top label.field { flex: 1 1 120px; }
+  .ear-progress { font-size: 13px; flex: 1 1 100%; text-align: left !important; margin-top: 4px; }
+  .ear-stage { padding: 16px 8px; }
+  .ear-question { font-size: 14px; margin-bottom: 14px; }
+  .ear-options { gap: 8px; }
+  .ear-options button { min-width: 76px; padding: 10px 12px; font-size: 14px; }
+  .dict-slots { gap: 6px; margin: 12px 0; }
+  .dict-slot { width: 40px; height: 48px; font-size: 18px; }
+  .dict-palette button { min-width: 42px; padding: 8px 10px; }
+  .ear-summary .big { font-size: 38px; }
+  .ear-summary table { font-size: 13px; }
+  .ear-summary td, .ear-summary th { padding: 5px 10px; }
+}

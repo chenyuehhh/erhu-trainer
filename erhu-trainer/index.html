@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="google">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>二胡练习台 · 节拍器 / 调音器 / 听音 / 跟谱</title>
+<link rel="stylesheet" href="css/base.css?v=69c88712">
+<link rel="stylesheet" href="css/themes.css?v=9ba2533a">
+<link rel="stylesheet" href="css/layout.css?v=8f5af9d4">
+<link rel="stylesheet" href="css/metronome.css?v=77020b2b">
+<link rel="stylesheet" href="css/tuner.css?v=2a7d0dbc">
+<link rel="stylesheet" href="css/ear.css?v=98b21b11">
+<link rel="stylesheet" href="css/score.css?v=eac4ec3c">
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand"><span class="logo">琴</span>二胡练习台</div>
+      <nav class="tabs" id="tabs"></nav>
+      <div class="top-actions"><span class="tiny" id="micHint"></span></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel active" id="panel-metronome"></section>
+    <section class="panel" id="panel-tuner"></section>
+    <section class="panel" id="panel-ear"></section>
+    <section class="panel" id="panel-score"></section>
+    <section class="panel" id="panel-settings"></section>
+  </main>
+
+  <footer class="page">
+    <span>@黑棠会长</span>
+    <span><kbd>空格</kbd> 播放/停止 · <kbd>[</kbd><kbd>]</kbd> 设 A/B 循环点</span>
+  </footer>
+</div>
+
+<script defer src="js/core/notation.js?v=f5e54a65"></script>
+<script defer src="js/core/audio.js?v=dfc03331"></script>
+<script defer src="js/core/wakelock.js?v=9c5e6906"></script>
+<script defer src="js/core/synth.js?v=b53e3091"></script>
+<script defer src="js/core/pitch.js?v=e3f76edb"></script>
+<script defer src="js/core/store.js?v=365746ce"></script>
+<script defer src="js/core/jianpu.js?v=a5f50880"></script>
+<script defer src="js/data/tunings.js?v=9e5b8798"></script>
+<script defer src="js/data/scores.js?v=5bb114be"></script>
+<script defer src="js/data/exercises.js?v=d9c3f3da"></script>
+<script defer src="js/modules/metronome.js?v=56ae4c45"></script>
+<script defer src="js/modules/tuner.js?v=e0775ca0"></script>
+<script defer src="js/modules/ear.js?v=b04c0c63"></script>
+<script defer src="js/modules/score.js?v=a968cec3"></script>
+<script defer src="js/app.js?v=48d3d433"></script>
+</body>
+</html>

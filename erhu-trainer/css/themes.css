@@ -1,0 +1,341 @@
+/* themes.css — 主题变量 + 各主题签名覆盖
+   六套主题：google（默认）/ dark（工业风）/ light / bauhaus / y2k / cyberpunk
+   变量含义：
+   --accent-grad 主按钮渐变（纯色主题与 --accent 相同）
+   --accent-contrast 强调色上的文字色；--border-w 边框宽度
+   --shadow-panel 卡片阴影；--ease/--dur 全局过渡缓动与时长
+   --string-inner/--string-outer 简谱内弦/外弦染色 */
+
+/* ============ 0. 谷歌风格（Material 3 浅色，默认） ============ */
+html[data-theme="google"] {
+  --bg: #f8f9fa;
+  --bg-soft: #ffffff;
+  --panel: #ffffff;
+  --panel-2: #f1f3f4;
+  --border: #dadce0;
+  --border-strong: #bdc1c6;
+  --text: #202124;
+  --text-dim: #5f6368;
+  --text-faint: #9aa0a6;
+  --accent: #1a73e8;
+  --accent-grad: #1a73e8;
+  --accent-soft: rgba(26, 115, 232, 0.08);
+  --accent-line: rgba(26, 115, 232, 0.32);
+  --accent-contrast: #ffffff;
+  --ok: #188038;
+  --ok-soft: rgba(24, 128, 56, 0.1);
+  --warn: #b06000;
+  --warn-soft: rgba(240, 163, 10, 0.12);
+  --warn-line: rgba(240, 163, 10, 0.5);
+  --err: #d93025;
+  --err-soft: rgba(217, 48, 37, 0.08);
+  --string-inner: rgba(26, 115, 232, 0.45);
+  --string-outer: rgba(240, 163, 10, 0.6);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --border-w: 1px;
+  --shadow-panel: 0 1px 2px rgba(60, 64, 67, 0.18), 0 2px 6px 1px rgba(60, 64, 67, 0.07);
+  --font: "Google Sans", Roboto, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur: 0.18s;
+}
+/* 谷歌签名：圆形 logo（M3 FAB 风）+ pill 导航 */
+html[data-theme="google"] .brand .logo {
+  border-radius: 50%;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+html[data-theme="google"] nav.tabs button { border-radius: 999px; }
+html[data-theme="google"] nav.tabs button.active { border-color: transparent; }
+html[data-theme="google"] .btn.primary:hover { filter: brightness(1.05); box-shadow: 0 1px 3px rgba(26, 115, 232, 0.4); }
+
+/* ============ 1. 深色工业风（v1 原版，保留） ============ */
+html[data-theme="dark"] {
+  --bg: #0f172a;
+  --bg-soft: #16203a;
+  --panel: #1e293b;
+  --panel-2: #243247;
+  --border: #334155;
+  --border-strong: #475569;
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-faint: #64748b;
+  --accent: #38bdf8;
+  --accent-grad: #38bdf8;
+  --accent-soft: rgba(56, 189, 248, 0.14);
+  --accent-line: rgba(56, 189, 248, 0.4);
+  --accent-contrast: #06121f;
+  --ok: #34d399;
+  --ok-soft: rgba(52, 211, 153, 0.14);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.1);
+  --warn-line: rgba(251, 191, 36, 0.4);
+  --err: #f87171;
+  --err-soft: rgba(248, 113, 113, 0.1);
+  --string-inner: rgba(56, 189, 248, 0.45);
+  --string-outer: rgba(251, 191, 36, 0.5);
+  --radius: 10px;
+  --radius-lg: 14px;
+  --border-w: 1px;
+  --shadow-panel: none;
+  --font: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  --ease: ease;
+  --dur: 0.15s;
+}
+
+/* ============ 2. 经典浅色（v1 原版，保留） ============ */
+html[data-theme="light"] {
+  --bg: #f1f5f9;
+  --bg-soft: #e7edf5;
+  --panel: #ffffff;
+  --panel-2: #f1f5f9;
+  --border: #dbe3ec;
+  --border-strong: #b8c4d2;
+  --text: #0f172a;
+  --text-dim: #475569;
+  --text-faint: #94a3b8;
+  --accent: #0284c7;
+  --accent-grad: #0284c7;
+  --accent-soft: rgba(2, 132, 199, 0.1);
+  --accent-line: rgba(2, 132, 199, 0.35);
+  --accent-contrast: #ffffff;
+  --ok: #059669;
+  --ok-soft: rgba(5, 150, 105, 0.12);
+  --warn: #b45309;
+  --warn-soft: rgba(180, 83, 9, 0.1);
+  --warn-line: rgba(180, 83, 9, 0.4);
+  --err: #dc2626;
+  --err-soft: rgba(220, 38, 38, 0.08);
+  --string-inner: rgba(2, 132, 199, 0.45);
+  --string-outer: rgba(180, 83, 9, 0.5);
+  --radius: 10px;
+  --radius-lg: 14px;
+  --border-w: 1px;
+  --shadow-panel: none;
+  --font: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  --ease: ease;
+  --dur: 0.15s;
+}
+
+/* ============ 3. 包豪斯（Bauhaus） ============
+   原色红黄蓝 + 黑白；零圆角、零阴影、2px 黑边；
+   交互 = 原色硬切换（无透明度渐变），短促 150ms ease-out */
+html[data-theme="bauhaus"] {
+  --bg: #ffffff;
+  --bg-soft: #ffffff;
+  --panel: #ffffff;
+  --panel-2: #ffffff;
+  --border: #000000;
+  --border-strong: #000000;
+  --text: #000000;
+  --text-dim: #333333;
+  --text-faint: #595959;
+  --accent: #dd0000;
+  --accent-grad: #dd0000;
+  --accent-soft: #ffcc00;      /* tab/徽标选中态 = 黄色实底 */
+  --accent-line: #000000;
+  --accent-contrast: #ffffff;
+  --ok: #0057b8;               /* 成功 = 蓝（原色约束） */
+  --ok-soft: rgba(0, 87, 184, 0.14);
+  --warn: #000000;             /* 警示 = 黑字（黄色底由 notice.warn 主题覆盖提供） */
+  --warn-soft: #ffcc00;
+  --warn-line: #000000;
+  --err: #dd0000;
+  --err-soft: rgba(221, 0, 0, 0.12);
+  --string-inner: #0057b8;
+  --string-outer: #dd0000;
+  --radius: 0px;
+  --radius-lg: 0px;
+  --border-w: 2px;
+  --shadow-panel: none;
+  --font: "Helvetica Neue", Arial, "Microsoft YaHei", "PingFang SC", sans-serif;
+  --ease: ease-out;
+  --dur: 0.15s;
+}
+/* 包豪斯签名：header 底部三原色条（硬分段色块）+ 大写宽距标题 */
+html[data-theme="bauhaus"] header.top { position: relative; }
+html[data-theme="bauhaus"] header.top::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 4px;
+  background: linear-gradient(90deg, #dd0000 0 33.4%, #ffcc00 33.4% 66.7%, #0057b8 66.7% 100%);
+}
+html[data-theme="bauhaus"] .panel-head h2,
+html[data-theme="bauhaus"] .card h3 {
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em;
+}
+html[data-theme="bauhaus"] .brand { letter-spacing: 0.1em; text-transform: uppercase; }
+html[data-theme="bauhaus"] .brand .logo {
+  border-radius: 0; background: #ffcc00; border-color: #000; color: #000;
+}
+/* 按钮：黑边方角，hover 原色硬切换 */
+html[data-theme="bauhaus"] .btn { font-weight: 700; box-shadow: none; }
+html[data-theme="bauhaus"] .btn:hover { background: #ffcc00; color: #000; border-color: #000; }
+html[data-theme="bauhaus"] .btn.primary { background: #dd0000; border-color: #000; }
+html[data-theme="bauhaus"] .btn.primary:hover { background: #0057b8; filter: none; }
+html[data-theme="bauhaus"] .btn.ghost:hover { background: #000; color: #fff; }
+html[data-theme="bauhaus"] .btn.toggled { background: #ffcc00; color: #000; border-color: #000; }
+html[data-theme="bauhaus"] .btn:active { transform: translate(1px, 1px); } /* 机械位移 */
+html[data-theme="bauhaus"] nav.tabs button { border-width: 2px; border-radius: 0; }
+html[data-theme="bauhaus"] nav.tabs button:hover { background: #ffcc00; color: #000; border-color: #000; }
+html[data-theme="bauhaus"] nav.tabs button.active {
+  background: #dd0000; color: #fff; border-color: #000;
+}
+html[data-theme="bauhaus"] .switch input:checked + .track::after { border-radius: 0; }
+html[data-theme="bauhaus"] .switch .track { border-radius: 0; }
+html[data-theme="bauhaus"] .badge { border-radius: 0; font-weight: 700; }
+/* 徽标圆形仅保留圆形元素本身（如拍点）——其余一律方角 */
+
+/* ============ 4. 千禧 Y2K ============
+   银色金属渐变背景、半透明毛玻璃卡片、粉渐变按钮、光晕阴影、
+   大圆角、弹性缓动、hover 放大、星星闪光装饰 */
+html[data-theme="y2k"] {
+  --bg: linear-gradient(135deg, #e6e6ee 0%, #f3eff8 55%, #e4f4f8 100%);
+  --bg-soft: rgba(255, 255, 255, 0.65);
+  --panel: rgba(255, 255, 255, 0.8);
+  --panel-2: rgba(255, 255, 255, 0.92);
+  --border: #c0c0c0;
+  --border-strong: #a8a8b8;
+  --text: #333340;
+  --text-dim: #63637a;
+  --text-faint: #9898ac;
+  --accent: #ff69b4;
+  --accent-grad: linear-gradient(135deg, #ff69b4 0%, #ff6ec7 100%);
+  --accent-soft: rgba(255, 105, 180, 0.16);
+  --accent-line: rgba(255, 105, 180, 0.45);
+  --accent-contrast: #ffffff;
+  --ok: #00a8b5;
+  --ok-soft: rgba(0, 168, 181, 0.12);
+  --warn: #c77800;
+  --warn-soft: rgba(255, 170, 0, 0.14);
+  --warn-line: rgba(255, 170, 0, 0.5);
+  --err: #ff4d8d;
+  --err-soft: rgba(255, 77, 141, 0.12);
+  --string-inner: rgba(0, 191, 255, 0.55);
+  --string-outer: rgba(255, 105, 180, 0.55);
+  --radius: 16px;
+  --radius-lg: 20px;
+  --border-w: 2px;
+  --shadow-panel: 0 4px 16px rgba(255, 105, 180, 0.25), 0 2px 6px rgba(192, 192, 192, 0.4);
+  --font: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  --ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur: 0.3s;
+}
+/* Y2K 签名：毛玻璃 + 星星闪光 */
+html[data-theme="y2k"] body { background: var(--bg); background-attachment: fixed; }
+html[data-theme="y2k"] .card, html[data-theme="y2k"] header.top { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+html[data-theme="y2k"] .brand .logo {
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff69b4, #00d5ff);
+  border-color: #fff; color: #fff;
+  box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
+}
+html[data-theme="y2k"] .btn { box-shadow: 0 2px 8px rgba(255, 105, 180, 0.25); }
+html[data-theme="y2k"] .btn:hover { transform: translateY(-2px) scale(1.04); }
+html[data-theme="y2k"] .btn:active { transform: scale(0.94); }
+html[data-theme="y2k"] .btn.primary { box-shadow: 0 4px 16px rgba(255, 105, 180, 0.45); }
+html[data-theme="y2k"] .btn.primary:hover { filter: saturate(1.2); }
+html[data-theme="y2k"] .btn.danger { background: linear-gradient(135deg, #ff4d8d, #ff77b0); border-color: #ff9ec8; }
+html[data-theme="y2k"] nav.tabs button { border-radius: 999px; }
+html[data-theme="y2k"] nav.tabs button.active {
+  background: linear-gradient(135deg, #ff69b4, #ff9ec8);
+  color: #fff; border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 12px rgba(255, 105, 180, 0.5);
+}
+html[data-theme="y2k"] .badge { border-radius: 999px; }
+/* 星星闪光装饰（两颗，fixed，不挡操作） */
+html[data-theme="y2k"] body::before,
+html[data-theme="y2k"] body::after {
+  content: "✦"; position: fixed; z-index: 0; pointer-events: none;
+  font-size: 28px; color: rgba(255, 105, 180, 0.5);
+  text-shadow: 0 0 12px rgba(0, 213, 255, 0.6);
+  animation: y2k-twinkle 2.6s ease-in-out infinite;
+}
+html[data-theme="y2k"] body::before { top: 84px; right: 6vw; }
+html[data-theme="y2k"] body::after {
+  content: "✧"; top: auto; bottom: 12vh; left: 4vw;
+  font-size: 20px; color: rgba(0, 213, 255, 0.55);
+  text-shadow: 0 0 12px rgba(255, 105, 180, 0.6);
+  animation-delay: 1.3s;
+}
+@keyframes y2k-twinkle {
+  0%, 100% { opacity: 0.35; transform: scale(1) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.25) rotate(18deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="y2k"] body::before, html[data-theme="y2k"] body::after { animation: none; }
+}
+
+/* ============ 5. 赛博朋克霓虹（Cyberpunk Neon） ============
+   近黑背景、青/品红霓虹发光、等宽字体、扫描线、
+   glitch 按下（位移而非缩放）、快过渡 100-150ms */
+html[data-theme="cyberpunk"] {
+  --bg: #0a0a0f;
+  --bg-soft: #0d0d15;
+  --panel: #10101a;
+  --panel-2: #161624;
+  --border: rgba(0, 255, 255, 0.28);
+  --border-strong: rgba(0, 255, 255, 0.5);
+  --text: #e8faff;
+  --text-dim: #8ab4bd;
+  --text-faint: #5a7681;
+  --accent: #00ffff;
+  --accent-grad: #00ffff;
+  --accent-soft: rgba(0, 255, 255, 0.1);
+  --accent-line: rgba(0, 255, 255, 0.4);
+  --accent-contrast: #000000;
+  --ok: #39ff14;
+  --ok-soft: rgba(57, 255, 20, 0.12);
+  --warn: #ffe600;
+  --warn-soft: rgba(255, 230, 0, 0.1);
+  --warn-line: rgba(255, 230, 0, 0.4);
+  --err: #ff3366;
+  --err-soft: rgba(255, 51, 102, 0.14);
+  --string-inner: rgba(0, 255, 255, 0.55);
+  --string-outer: rgba(255, 0, 255, 0.5);
+  --radius: 8px;
+  --radius-lg: 8px;
+  --border-w: 1px;
+  --shadow-panel: 0 0 18px rgba(0, 255, 255, 0.08);
+  --font: Consolas, "Cascadia Code", "Microsoft YaHei", "PingFang SC", monospace;
+  --ease: ease-out;
+  --dur: 0.12s;
+}
+/* 赛博朋克签名：网格背景 + 扫描线覆盖层 */
+html[data-theme="cyberpunk"] body {
+  background:
+    linear-gradient(rgba(0, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.035) 1px, transparent 1px),
+    var(--bg);
+  background-size: 34px 34px, 34px 34px, auto;
+}
+html[data-theme="cyberpunk"] body::after {
+  content: ""; position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0, 255, 255, 0.025) 2px 4px);
+}
+/* 发光文字 */
+html[data-theme="cyberpunk"] .panel-head h2,
+html[data-theme="cyberpunk"] .brand {
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+html[data-theme="cyberpunk"] .card h3 { color: var(--accent); text-shadow: 0 0 8px rgba(0, 255, 255, 0.4); }
+html[data-theme="cyberpunk"] .pitch-read .cents { text-shadow: 0 0 12px currentColor; }
+html[data-theme="cyberpunk"] .brand .logo {
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), inset 0 0 6px rgba(0, 255, 255, 0.3);
+  color: var(--accent);
+}
+/* 按钮：霓虹发光，hover 增强，glitch 按下 */
+html[data-theme="cyberpunk"] .btn:hover { box-shadow: 0 0 12px rgba(0, 255, 255, 0.35); }
+html[data-theme="cyberpunk"] .btn.primary { box-shadow: 0 0 14px rgba(0, 255, 255, 0.4); }
+html[data-theme="cyberpunk"] .btn.primary:hover { filter: none; box-shadow: 0 0 26px rgba(0, 255, 255, 0.65); }
+html[data-theme="cyberpunk"] .btn.primary:active,
+html[data-theme="cyberpunk"] .btn:active {
+  transform: translate(2px, -1px);
+  text-shadow: 0 0 8px #ff00ff;
+}
+html[data-theme="cyberpunk"] .btn.danger { border-color: var(--err); box-shadow: 0 0 8px rgba(255, 51, 102, 0.3); }
+html[data-theme="cyberpunk"] .btn.danger:hover { box-shadow: 0 0 18px rgba(255, 51, 102, 0.55); }
+html[data-theme="cyberpunk"] nav.tabs button.active {
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+  box-shadow: inset 0 -2px 0 var(--accent), 0 0 10px rgba(0, 255, 255, 0.15);
+}

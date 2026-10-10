@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     reading-view-template.html — 可读版式页面骨架
+     两种用法：
+       A. 交给 scripts/md_to_readable.py 自动填充（推荐）：{{...}} 会被脚本替换
+       B. 手工使用：复制本文件 → 把 CSS 占位符换成 assets/reading-view.css 全文
+          → 删掉不用的块 → 把正文填进正文占位符（勿在本注释内写占位符字面量，
+             否则脚本全局替换会把正文填进本注释，产出双份内容）
+     硬约束：
+       1. 必须单文件自包含：CSS 内联，不引任何外部资源，不写 JS
+       2. 不要在正文里加 on* 事件或 <script>
+       3. 正文栏宽由 --rv-measure 控制，不要在正文里再写行内 width
+     ============================================================ -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>曲库旋律完整性审计报告</title>
+<style>
+/* ============================================================
+   reading-view.css — 可读版式 v1.0
+   用途：把长文本渲染成便于持续阅读的单页 HTML
+   依据：references/typography.md（每个参数的理由与可调范围）
+   约定：
+     1. 使用时必须整段内联进 <style> 标签，禁止外链（保证单文件自包含）
+     2. 调整参数只改 :root 变量，不要改下面的规则
+     3. 本样式为「浅色低眩光」基准；深色变体见文件末尾
+   ============================================================ */
+
+:root {
+  /* ---- 版式参数（冻结值：改动前先读 typography.md）---- */
+  --rv-font-size: 18px;        /* 正文基准字号，最小 17px */
+  --rv-font-size-mobile: 17px;
+  --rv-line-height: 1.9;       /* 行距，最小 1.8 */
+  --rv-measure: 760px;         /* 正文栏宽；对应每行约 30–38 汉字 */
+  --rv-pad: 28px;              /* 桌面端页边留白 */
+  --rv-pad-mobile: 18px;
+  --rv-letter-spacing: 0.02em; /* 字距微松，降低字形粘连 */
+
+  /* ---- 配色（浅色低眩光基准）---- */
+  --rv-bg:          #FBFAF7;   /* 暖白，非纯白：减轻屏幕眩光 */
+  --rv-surface:     #FFFFFF;
+  --rv-ink:         #23262B;
+  --rv-ink-soft:    #55595F;
+  --rv-line:        #E4E0D8;
+  --rv-heading:     #14171B;
+  --rv-accent:      #17646F;
+  --rv-accent-soft: #EAF2F3;
+  --rv-hl:          #FFF2C2;   /* 关键短语高亮 */
+  --rv-num:         #FBE7D2;   /* 数字 / 单位高亮 */
+  --rv-warn:        #8A5A00;
+  --rv-warn-soft:   #FCF4E3;
+  --rv-ok:          #2C6B4F;
+  --rv-ok-soft:     #EDF5F0;
+  --rv-code-bg:     #F1EFE9;
+}
+
+/* ---------- 基础 ---------- */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--rv-bg);
+  color: var(--rv-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+               "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC",
+               "Noto Sans CJK SC", sans-serif;
+  font-size: var(--rv-font-size);
+  line-height: var(--rv-line-height);
+  letter-spacing: var(--rv-letter-spacing);
+  /* 关键：绝不用两端对齐——会制造字间河流，加重跳行 */
+  text-align: left;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.page {
+  max-width: var(--rv-measure);
+  margin: 0 auto;
+  padding: 56px var(--rv-pad) 96px;
+}
+
+/* ---------- 标题 ---------- */
+h1 {
+  font-size: 30px;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: var(--rv-heading);
+  margin: 0 0 10px;
+}
+h2 {
+  font-size: 22px;
+  line-height: 1.5;
+  color: var(--rv-heading);
+  margin: 60px 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--rv-line);
+}
+h3 {
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--rv-accent);
+  margin: 34px 0 12px;
+}
+h4 { font-size: 18px; margin: 24px 0 8px; color: var(--rv-heading); }
+h1 + .sub { margin-top: 0; }
+
+.sub {
+  color: var(--rv-ink-soft);
+  font-size: 17px;
+  margin: 0 0 22px;
+}
+
+/* 标题带锚点时保留可点性，但不加下划线干扰 */
+h2 a, h3 a { color: inherit; text-decoration: none; }
+
+/* ---------- 正文段落 ---------- */
+p { margin: 0 0 16px; }
+strong { color: #101317; }
+a { color: var(--rv-accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+code {
+  font-family: Consolas, "Cascadia Mono", Menlo, "Courier New", monospace;
+  font-size: 0.88em;
+  background: var(--rv-code-bg);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+pre {
+  background: var(--rv-code-bg);
+  border: 1px solid var(--rv-line);
+  border-radius: 3px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 15px;
+  line-height: 1.7;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+ul, ol { margin: 0 0 16px; padding-left: 26px; }
+li { margin-bottom: 9px; }
+li > ul, li > ol { margin-top: 9px; margin-bottom: 4px; }
+
+blockquote {
+  margin: 18px 0;
+  padding: 2px 0 2px 18px;
+  border-left: 3px solid var(--rv-line);
+  color: var(--rv-ink-soft);
+  font-size: 17px;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+hr { border: 0; border-top: 1px solid var(--rv-line); margin: 44px 0; }
+
+img { max-width: 100%; height: auto; border-radius: 3px; }
+
+/* ---------- 高亮与强调 ---------- */
+/* 关键短语：下划线式高亮，不改变字色，避免打断阅读节奏 */
+.hl {
+  background: linear-gradient(transparent 62%, var(--rv-hl) 62%);
+  padding: 0 1px;
+}
+/* 数字 / 单位 / 时限：独立色块，便于回查 */
+.num {
+  background: var(--rv-num);
+  border-radius: 2px;
+  padding: 0 3px;
+  font-variant-numeric: tabular-nums;
+}
+mark { background: var(--rv-hl); color: inherit; padding: 0 1px; }
+
+/* 条件句提行：把「若…则…」「必须…」「不得…」单独成块 */
+.cond {
+  display: block;
+  margin: 14px 0;
+  padding: 10px 14px;
+  background: var(--rv-surface);
+  border-left: 4px solid var(--rv-accent);
+  font-weight: 600;
+}
+/* 否定词提行 */
+.neg {
+  display: block;
+  margin: 14px 0;
+  padding: 10px 14px;
+  background: var(--rv-warn-soft);
+  border-left: 4px solid var(--rv-warn);
+  font-weight: 600;
+}
+
+/* ---------- 信息盒 ---------- */
+.box {
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-line);
+  border-radius: 3px;
+  padding: 18px 22px;
+  margin: 20px 0;
+}
+.box p:last-child, .box ul:last-child, .box ol:last-child,
+.box table:last-child, .box .tw:last-child { margin-bottom: 0; }
+.box.lead { border-left: 5px solid var(--rv-accent); background: var(--rv-accent-soft); }
+.box.warn { border-left: 5px solid var(--rv-warn);   background: var(--rv-warn-soft); }
+.box.ok   { border-left: 5px solid var(--rv-ok);     background: var(--rv-ok-soft); }
+.box.plain { background: var(--rv-surface); }
+
+/* 元信息块（标题下方） */
+.meta {
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-line);
+  border-left: 5px solid var(--rv-accent);
+  padding: 16px 20px;
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--rv-ink-soft);
+  margin: 0 0 34px;
+}
+.meta b { color: var(--rv-ink); }
+
+/* ---------- 表格 ---------- */
+/* 必须包一层 .tw：窄屏横向滚动，避免整页被撑开 */
+.tw { overflow-x: auto; margin: 20px 0 26px; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.75;
+  background: var(--rv-surface);
+}
+th, td {
+  border: 1px solid var(--rv-line);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: #F3F1EB; font-weight: 600; }
+tbody tr:nth-child(even) td { background: #FCFBF8; }
+
+/* ---------- 标签与评级 ---------- */
+.tag {
+  display: inline-block;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: #EFEDE7;
+  color: var(--rv-ink-soft);
+  margin-right: 6px;
+}
+.tag.todo { background: var(--rv-warn-soft); color: var(--rv-warn); }
+.tag.ok   { background: var(--rv-ok-soft);   color: var(--rv-ok); }
+.star { white-space: nowrap; color: var(--rv-accent); letter-spacing: -1px; font-weight: 700; }
+.star.no { color: #9A9A9A; }
+
+/* ---------- 目录 ---------- */
+.toc {
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-line);
+  border-radius: 3px;
+  padding: 16px 22px;
+  margin: 0 0 40px;
+  font-size: 16px;
+  line-height: 1.9;
+}
+.toc > .toc-title { font-weight: 600; margin-bottom: 6px; color: var(--rv-heading); }
+.toc ol, .toc ul { margin: 0; padding-left: 22px; }
+.toc li { margin-bottom: 4px; }
+.toc a { color: var(--rv-ink); text-decoration: none; }
+.toc a:hover { color: var(--rv-accent); }
+
+/* ---------- 尾注 / 说明 ---------- */
+.legend { font-size: 15px; color: var(--rv-ink-soft); line-height: 1.9; }
+.foot { margin-top: 48px; font-size: 15px; color: var(--rv-ink-soft); line-height: 1.9; }
+
+/* 待填写下划线（用于可打印的记录表） */
+.fill {
+  display: inline-block;
+  min-width: 120px;
+  border-bottom: 1px dashed #B9B4A8;
+  color: #A9A49A;
+  font-size: 15px;
+  padding: 0 4px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 620px) {
+  body { font-size: var(--rv-font-size-mobile); }
+  .page { padding: 34px var(--rv-pad-mobile) 64px; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 20px; margin-top: 44px; }
+  h3 { font-size: 18px; }
+  table { font-size: 15px; }
+  th, td { padding: 8px 9px; }
+}
+
+/* ---------- 打印 ---------- */
+@media print {
+  body { background: #fff; font-size: 11.5pt; }
+  .page { max-width: none; padding: 0; }
+  h2 { page-break-after: avoid; }
+  h3 { page-break-after: avoid; }
+  table, .box, .cond, .neg, pre { page-break-inside: avoid; }
+  .toc { page-break-after: always; }
+  a { color: inherit; text-decoration: none; }
+}
+
+/* ============================================================
+   深色变体（可选）
+   用法：在 <body> 上加 class="rv-dark"
+   注意：深底浅字对部分阅读困难者反而更累；未经验证不要默认开启。
+   ============================================================ */
+body.rv-dark {
+  --rv-bg:          #12161B;
+  --rv-surface:     #1A1F26;
+  --rv-ink:         #E6E8EB;
+  --rv-ink-soft:    #A8AEB7;
+  --rv-line:        #2C333C;
+  --rv-heading:     #F4F6F8;
+  --rv-accent:      #5FBFCB;
+  --rv-accent-soft: #17262A;
+  --rv-hl:          #4A411F;
+  --rv-num:         #45331F;
+  --rv-warn:        #E0B464;
+  --rv-warn-soft:   #2A2418;
+  --rv-ok:          #7FC5A0;
+  --rv-ok-soft:     #16261F;
+  --rv-code-bg:     #232A32;
+}
+body.rv-dark strong { color: #FFFFFF; }
+body.rv-dark th { background: #222932; }
+body.rv-dark tbody tr:nth-child(even) td { background: #1E242B; }
+body.rv-dark .tag { background: #262D36; }
+
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>曲库旋律完整性审计报告</h1>
+  <p class="sub">二胡练习台 · 20 首曲目逐首对照 · 2026-10-09（含全曲化进度更新）</p>
+  <div class="meta"><b>审计：</b>咪咪<br>
+    <b>范围：</b>10 歌曲 + 10 基本功<br>
+    <b>方法：</b>结构级对照</div>
+  <div class="toc">
+<div class="toc-title">目录</div>
+<ol>
+<li><a href="#sec-1">一、结论（先行）</a>
+</li>
+<li><a href="#sec-2">二、总览</a>
+</li>
+<li><a href="#sec-3">三、逐首明细</a>
+<ul>
+<li><a href="#sec-4">1. 小星星 —— ✅ 完整（会长点名核查）</a></li>
+<li><a href="#sec-5">2. 欢乐颂 —— ⚠️ 缺第 3/4 句（P1，补全成本最低）</a></li>
+<li><a href="#sec-6">3. 茉莉花 —— ✅ 本轮已全曲化</a></li>
+<li><a href="#sec-7">4. 铃儿响叮当 —— ⚠️ 缺主歌（P2）</a></li>
+<li><a href="#sec-8">5. 田园春色 —— ⚠️ 大幅简化【待对谱】（P2）</a></li>
+<li><a href="#sec-9">6. 凤阳花鼓 —— ⚠️ 主题在、多段缺（P3）</a></li>
+<li><a href="#sec-10">7. 上学歌 —— ⚠️ 后半压缩（P2）</a></li>
+<li><a href="#sec-11">8. 沧海一声笑 —— ✅ 基本完整（P3 可选）</a></li>
+<li><a href="#sec-12">9. 月亮代表我的心 —— ⚠️ 约 40%（P1）</a></li>
+<li><a href="#sec-13">10. 菊花台 —— ⚠️ 仅副歌（P2）</a></li>
+<li><a href="#sec-14">11–20. 基本功 10 首 —— ✅ 不适用</a></li>
+</ul>
+</li>
+<li><a href="#sec-15">四、方法与局限</a>
+</li>
+<li><a href="#sec-16">五、行动建议</a>
+</li>
+</ol>
+</div>
+<blockquote><p><strong>勘误与进度更新（<span class="num">2026-10-09</span> 全曲化实施后）</strong> 1. <strong>上学歌判定修正：⚠️ → ✅ 结构完整。</strong> 原判「缺后半约一半」基于「原曲按 4/4 折算 32 小节」的小节数对比，但原曲实为 <strong>2/4 拍</strong>（约 18 小节 × 2 拍），与现版 15 小节 4/4（60 拍）比对后确认 8 句歌词全覆盖、音序与教材图版大体一致。<strong>方法论教训：对 2/4 曲目不能直接用 4/4 小节数比值估算覆盖率。</strong> 2. 全曲化进度：<strong>P1 已完成上线</strong>（欢乐颂 16 小节 4 句、月亮代表我的心 33 小节 8 句换 G 调 5-2 弦）；<strong>P2 本轮完成</strong>（菊花台 32 小节 16 句补主歌×2、上学歌补 measures 分句）；<strong>P3 完成</strong>（沧海一声笑 40 小节 20 句全曲 AABA'）。菊花台主歌音序存在来源间出入，已标【待对谱校准】；铃儿响叮当主歌、田园春色、凤阳花鼓因音源节奏粒度不足或仅有图片谱，<strong>维持待对谱，未硬编</strong>（对谱素材：铃儿响叮当 1=G 中文版、田园春色中国曲谱网 4 版本图片谱、凤阳花鼓曲谱热 D 调 4/4 编配图片谱）。</p></blockquote>
+<h2 id="sec-1">一、结论（先行）</h2>
+<ol>
+<li>本次审计覆盖曲库全部 20 首：<strong>10 首歌曲 + 10 首基本功练习曲</strong>。逐首对照公认旋律结构，判定「是否为了适应版面而砍旋律」。
+</li>
+<li>总体判定：<strong>完整 3 首、结构性省略 7 首、不适用 10 首</strong>。没有发现新的「音序走样」案例——唯一一处旋律走样是旧版茉莉花（已修复入库）。
+</li>
+<li>小星星是好消息：<strong>主题 6 句 12 小节全部在内，音序与通行版一致，是完整版</strong>，不存在砍旋律问题。
+</li>
+<li>根因与此前判断一致：一节一行版面 + 无句子结构，导致编数据时刻意收短。<strong>多行排版与逐句句条一期已上线，版面障碍已消除</strong>，剩余 7 首可以按数据补全的方式逐一全曲化。
+</li>
+<li>局限声明：本审计是<strong>结构级对照</strong>（乐句覆盖、小节数、音序抽查）；「覆盖率」为按乐句小节数的估算值。二胡教材类曲目（田园春色、凤阳花鼓）的音级级校准需对出版谱完成，相关条目已标【待对谱】。
+</li>
+</ol>
+<h2 id="sec-2">二、总览</h2>
+<div class="tw">
+<table>
+<thead><tr>
+<th>#</th>
+<th>曲目</th>
+<th>分组</th>
+<th>现版小节</th>
+<th>原曲结构</th>
+<th>覆盖率（估算）</th>
+<th>判定</th>
+<th>全曲化优先级</th>
+</tr></thead>
+<tbody>
+<tr><td>1</td><td>小星星</td><td>入门</td><td>12</td><td>主题 6 句 × 2 小节 = 12</td><td><span class="num">100%</span>（主题）</td><td>✅ 完整</td><td>—</td></tr>
+<tr><td>2</td><td>欢乐颂</td><td>入门</td><td>8</td><td>主题 4 句 × 4 小节 = 16</td><td><span class="num">50%</span></td><td>⚠️ 缺第 3/4 句</td><td>P1</td></tr>
+<tr><td>3</td><td>茉莉花</td><td>流行</td><td>19</td><td>全曲 7 句</td><td><span class="num">100%</span></td><td>✅ 本轮已全曲化</td><td>尾句待校准</td></tr>
+<tr><td>4</td><td>铃儿响叮当</td><td>入门</td><td>16</td><td>主歌 8 + 副歌 16</td><td>约 <span class="num">70%</span>（缺主歌）</td><td>⚠️</td><td>P2</td></tr>
+<tr><td>5</td><td>田园春色</td><td>入门</td><td>16</td><td>陈振铎曲，多段（约 40+ 小节）</td><td>约 30–<span class="num">40%</span>【待对谱】</td><td>⚠️ 大幅简化</td><td>P2</td></tr>
+<tr><td>6</td><td>凤阳花鼓</td><td>入门</td><td>16</td><td>多段民歌 + 过门</td><td>约 <span class="num">50%</span>（主题在）</td><td>⚠️</td><td>P3</td></tr>
+<tr><td>7</td><td>上学歌</td><td>入门</td><td>17</td><td>8 句 × 4 小节 = 32</td><td>约 <span class="num">55%</span></td><td>⚠️ 后半压缩</td><td>P2</td></tr>
+<tr><td>8</td><td>沧海一声笑</td><td>流行</td><td>15</td><td>A ×2 + B + 再现</td><td>约 <span class="num">85%</span></td><td>✅ 基本完整</td><td>P3</td></tr>
+<tr><td>9</td><td>月亮代表我的心</td><td>流行</td><td>14</td><td>主歌 A ×2 + B 段 + 副歌 ×2，约 32 小节</td><td>约 <span class="num">40%</span></td><td>⚠️</td><td>P1</td></tr>
+<tr><td>10</td><td>菊花台</td><td>流行</td><td>16</td><td>主歌 ×2 + 副歌 + 桥段</td><td>约 <span class="num">35%</span>（仅副歌）</td><td>⚠️</td><td>P2</td></tr>
+<tr><td>11–20</td><td>基本功 10 首</td><td>每日基本功</td><td>—</td><td>原创</td><td>不适用</td><td>✅</td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="sec-3">三、逐首明细</h2>
+<h3 id="sec-4">1. 小星星 —— ✅ 完整（会长点名核查）</h3>
+<p>原曲主题 6 句：1 1 5 5 6 6 5 ｜ 4 4 3 3 2 2 1 ｜ 5 5 4 4 3 3 2 ｜ 5 5 4 4 3 3 2 ｜ 1 1 5 5 6 6 5 ｜ 4 4 3 3 2 2 1。</p>
+<p>现版 12 小节与上述 6 句<strong>顺序、音序完全一致</strong>，一句不少。莫扎特变奏曲式的附加段不在儿歌唱法内，无需补。</p>
+<h3 id="sec-5">2. 欢乐颂 —— ⚠️ 缺第 3/4 句（P1，补全成本最低）</h3>
+<p>现版只有主题前两句（8 小节）：3 3 4 5 ｜ 5 4 3 2 ｜ 1 1 2 3 ｜ 3. 2/2 2 - ＋ 3 3 4 5 ｜ 5 4 3 2 ｜ 1 1 2 3 ｜ 2. 1/2 1 -。</p>
+<p>缺第 3/4 句（2 2 3 2 起始的两句，音域 1~2，一把位全覆盖）。补 8 小节即成完整主题，<strong>是全曲化收益/成本比最高的一首</strong>。第 3/4 句具体音序存在常见版差异，补数据时按选定教材版对谱。【待对谱】</p>
+<h3 id="sec-6">3. 茉莉花 —— ✅ 本轮已全曲化</h3>
+<p>7 句 19 小节已入库（音序对照澳门教青局《芬芳茉莉》教学简谱）。句 1–5 有来源；<strong>句 7 尾句（6 1 2 3 ｜ 2 1 6 1 ｜ 5 - - -）为候选音序，待会长哼唱校准</strong>。</p>
+<h3 id="sec-7">4. 铃儿响叮当 —— ⚠️ 缺主歌（P2）</h3>
+<p>现版 = 副歌两遍（3 3 3 起始）+ 副歌尾句两遍（4 4 4 4 起始），共 16 小节，<strong>副歌部分完整</strong>。缺主歌「Dashing through the snow」8 小节（音域 5 3 2 1 下方走行，1-5 弦可奏）。P2。</p>
+<h3 id="sec-8">5. 田园春色 —— ⚠️ 大幅简化【待对谱】（P2）</h3>
+<p>陈振铎编的二胡经典练习曲，原曲多段、远超现版 16 小节。现版保留的主题段音序需与出版谱逐句核对后才能全曲化——<strong>这类二胡教材曲是全曲化价值最高的一类</strong>，但必须以正规出版谱为底本，AI 凭记忆补音风险高。【待对谱】</p>
+<h3 id="sec-9">6. 凤阳花鼓 —— ⚠️ 主题在、多段缺（P3）</h3>
+<p>现版 16 小节保留了「左手锣右手鼓」主题（附点特征音型在）。原曲为多段体民歌（多段歌词共用旋律 + 锣鼓过门），补全主要是<strong>段落重复与过门</strong>，旋律增量不大。P3。</p>
+<h3 id="sec-10">7. 上学歌 —— ⚠️ 后半压缩（P2）</h3>
+<p>原曲 8 句 32 小节（太阳当空照 / 花儿对我笑 / 小鸟说早早早 / 你为什么背上小书包 / 我去上学校 / 天天不迟到 / 爱学习爱劳动 / 长大要为人民立功劳）。现版 17 小节，前半（太阳当空照至小鸟说）忠实，后半两句被压缩。P2。</p>
+<h3 id="sec-11">8. 沧海一声笑 —— ✅ 基本完整（P3 可选）</h3>
+<p>现版 15 小节覆盖 A 段两遍 + B 段前半 + 再现，主题旋律（6 5 3 2 1 下行五声）完整，G 调 5-2 弦一把位全覆盖。缺 B 段后半与尾句，练习视角影响小。P3 可选。</p>
+<h3 id="sec-12">9. 月亮代表我的心 —— ⚠️ 约 <span class="num">40%</span>（P1）</h3>
+<p>现版 14 小节 = 主歌前两句片段 + 主题句 + 副歌首句（1' 6 5 3 ｜ 2 1 - -）。缺：主歌 A 后半（我的情也真…）、B 段（我的爱也真…）、副歌第二句。<strong>二胡流行金曲，建议 P1</strong>。音序需对照原谱逐句校准后入库。</p>
+<h3 id="sec-13">10. 菊花台 —— ⚠️ 仅副歌（P2）</h3>
+<p>现版 16 小节 = 副歌两句 ×2 + 尾（3' 二把已标注）。缺主歌两段（黄金甲…前的叙事段）与桥段。扩全曲会引入更多二把/三把音，难度会上升，建议 P2 并保留「副歌精练版」作为入门档。</p>
+<h3 id="sec-14">11–20. 基本功 10 首 —— ✅ 不适用</h3>
+<p>音阶、模进、快弓、长音等均为原创练习曲，无原曲对照，不存在砍旋律问题。</p>
+<h2 id="sec-15">四、方法与局限</h2>
+<ol>
+<li>结构对照依据：公认旋律的乐句结构（小星星、欢乐颂、铃儿响叮当、上学歌、沧海一声笑、月亮代表我的心、菊花台）+ 已查证的出版简谱来源（茉莉花：澳门教青局《芬芳茉莉》教学计划所附简谱）。
+</li>
+<li>覆盖率为按乐句小节数的结构估算，<strong>不是逐音校验</strong>；保留段落的音序做了抽查（含旧版茉莉花的走样定位），未见新的走样。
+</li>
+<li>二胡教材曲（田园春色、凤阳花鼓）与流行曲音级校准，需以出版谱或会长哼唱订正为准，相关条目标【待对谱】。
+</li>
+</ol>
+<h2 id="sec-16">五、行动建议</h2>
+<ol>
+<li><strong>P1</strong>：欢乐颂（补第 3/4 句 8 小节即完整）、月亮代表我的心（补全曲）。
+</li>
+<li><strong>P2</strong>：上学歌（补后半两句）、菊花台（补主歌，保留副歌精练版）、铃儿响叮当（补主歌）、田园春色（对谱后全曲化）。
+</li>
+<li><strong>P3</strong>：凤阳花鼓（补过门与段落）、沧海一声笑（补 B 段后半，可选）。
+</li>
+<li>数据格式已就绪：measures 乐句标注（茉莉花为样板）+ 无标注自动切句兜底；音域冲突沿用「个别低音改高八度并在 desc 标注」先例。
+</li>
+<li>每首补全后跑 tools/check-score.mjs 体检（拍数对齐）并同步 dom 断言，防止回归。
+</li>
+</ol>
+
+
+</div>
+</body>
+</html>
